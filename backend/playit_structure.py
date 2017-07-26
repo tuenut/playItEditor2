@@ -107,6 +107,53 @@ class PlayItFilesStructure:
         pass
 
 
+class PlayItButton:
+    """
+    Class describes properties data of PlayIt button and provide methods
+     to setup and reset button data.
+    """
+
+    def __init__(self):
+        """Initialization button with default values."""
+
+        # TODO: Make word wrap function to split self.title on 15 length lines
+
+        self.active = False  # may be useless in future.
+        self.button_type = ''  # 'ART' or 'GROUP' or 'SUBGROUP'
+        self.button_id = 0  # article or group number
+        self.title = ''  # Not formatted text.
+        self.color = '#FFFFFF'
+        self.content = []
+        # self.content is like that [{'art': '000000'}, '{Enter}']
+        # in config that must be look like:
+        # {CSB LA0052M1|art}000000{Enter}
+
+    def setup(self, btn_type, btn_id, title, content, color):
+        self.active = True
+        self.button_type = btn_type
+        self.button_id = btn_id
+        self.title = title
+        self.content = content
+        self.color = color
+
+    def reset(self):
+        self.active = False
+        self.button_type = None
+        self.button_id = None
+        self.title = None
+        self.content = None
+        self.color = None
+
+
+class PlayitMacroFile:
+    def __init__(self):
+        self.buttons = [[PlayItButton for col in range(8)] for row in range(5)]
+
+    @property
+    def get_buttons(self):
+        return self.buttons
+
+
 if __name__ == '__main__':
     a = PlayItFilesStructure('_example')
     a.open()
