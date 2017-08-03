@@ -3,11 +3,12 @@ from collections import OrderedDict
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter.messagebox import showerror
 
-from frontend.gui_framework import RootWindow, AboutWindow
+from frontend.GuiFramework import RootWindow, AboutWindow
+from frontend.PlayitButtons import ButtonsView
+from backend.ScriptStructure import FileStructure
 
 
 class MainAppWindow(RootWindow):
-    # TODO: добавить работу с группами(табы)
     def __init__(self):
         RootWindow.__init__(self, title='Редактор PlayIt', geo='1303x823')
 
@@ -15,7 +16,6 @@ class MainAppWindow(RootWindow):
         self.__save_file_path = None
         self.__config_text_list = []
         self.__dialog_window = None
-        self.plt_grid_cells = [[None for col in range(8)] for row in range(5)]
 
         # Creating menu line.
         self.menu_items_layout.update(
@@ -38,22 +38,6 @@ class MainAppWindow(RootWindow):
         self.menu_items_objects['Файл'].entryconfigure(
             'Сохранить', state=tk.DISABLED)
         self.__gen_right_pane()
-        self.__gen_plt_empty_grid()
-
-    def __gen_plt_empty_grid(self):
-        # generate grid
-        for row in range(5):
-            for col in range(8):
-                cell = tk.Frame(self.view_inner_frame, height=160, width=160,
-                                bd=1, relief=tk.SUNKEN)
-                cell.grid(row=row, column=col)
-                cell.grid_propagate(False)
-                cell.grid_rowconfigure(0, minsize=160)
-                cell.grid_columnconfigure(0, minsize=160)
-
-                # PlayItButton(cell)
-
-                self.plt_grid_cells[row][col] = cell
 
     def __gen_right_pane(self):
         # Right pane. Editor view
@@ -64,8 +48,8 @@ class MainAppWindow(RootWindow):
         self.view_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
         # Canvas for attach scroll to frame
-        self.view_canvas = tk.Canvas(self.view_frame, bg='red')
-        self.view_inner_frame = tk.Frame(self.view_canvas, bg='blue')
+        self.view_canvas = tk.Canvas(self.view_frame, bg='#888888')
+        self.view_inner_frame = tk.Frame(self.view_canvas, bg='#BBBBBB')
 
         self.view_v_scroll = tk.Scrollbar(self.view_frame,
                                           orient=tk.VERTICAL,
@@ -91,8 +75,7 @@ class MainAppWindow(RootWindow):
             lambda event: self.view_canvas.config(
                 scrollregion=self.view_canvas.bbox('all'), ))
 
-    def __edit_button_dialog(self):
-        pass
+        ButtonsView(self.view_inner_frame)
 
     def __new_file(self):
         for child in self.view_inner_frame.winfo_children():
@@ -110,11 +93,9 @@ class MainAppWindow(RootWindow):
                 self.root.title(self.__open_file_path)
                 self.menu_items_objects['Файл'].entryconfigure('Сохранить',
                                                                state=tk.NORMAL)
-                with open(self.__open_file_path, 'r') as f:
-                    self.__config_text_list = list(f)
 
-            # GetConfig(file_name[file_name.rfind('/')+1:-3])
-            # TODO: next getConfig and draw buttons with PlayItButton
+                playit_process = FileStructure(self.__open_file_path)
+                playit_process.open()
 
     def __save_file(self):
         self.__save_file_path = asksaveasfilename(

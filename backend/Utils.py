@@ -1,4 +1,4 @@
-def __hex_to_rgb(hex_color):
+def hex_to_rgb(hex_color):
     """Return 'red, green, blue' for the color given as #rrggbb."""
     hex_color = hex_color.lstrip('#')
 
@@ -19,7 +19,7 @@ def content_convert(content):
     """
     Convert actions list from gui to content-line for PlayIt macros.
     """
-    # TODO: code subj.
+    # TODO: content convertor from dict to playIt-config-like string
     content_text = ''.join(content)
     return content_text
 
