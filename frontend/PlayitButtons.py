@@ -1,9 +1,8 @@
 import tkinter as tk
 from collections import OrderedDict
 
-from backend.Utils import hex_to_rgb, title_convert
+from backend.Utils import color_convert, title_convert
 from frontend.GuiFramework import RootWindow, FallingList
-
 
 # TODO: add docs
 
@@ -31,13 +30,25 @@ class ButtonsView:
                 cell.grid_rowconfigure(0, minsize=160)
                 cell.grid_columnconfigure(0, minsize=160)
 
-                PlayItButton(self.popup_menu.popup, cell)
+                cell = PlayItButton(self.popup_menu.popup, cell)
+                print(cell)
 
                 self.plt_grid_cells[row][col] = cell
 
-    def load(self):
+    def load(self, buttons):
         # TODO: make method for gen buttons from FileStructure.macros
         # must gen only for one view/widget.
+        for button_id in buttons:
+            button = buttons[button_id]
+            plt_button = self.plt_grid_cells[
+                int(button['position'][0])-1][
+                int(button['position'][1])-1]
+
+            print(buttons[button_id]['bkcolor'])
+            plt_button.plt_set(plt_id=button_id,
+                               text=buttons[button_id]['title'],
+                               color=color_convert(buttons[button_id]['bkcolor']))
+
         pass
 
 
@@ -122,7 +133,7 @@ class PlayItButton(tk.Label):
 
             swap_1st_button = None
 
-    def _gen_config(self):
+    def _button_configure(self):
         # TODO: ??? may be move to plt_get_strings() for don't store in memory
         playit_content = OrderedDict([
             ('kst-1', ['{CSB LA0052M1|kst-1}', '{Enter}']),
@@ -143,7 +154,7 @@ class PlayItButton(tk.Label):
         self.str_title = 'Title=%s\\n\\n%s' % (
             title_convert(self.text),
             self.id[self.id.find('_') + 1:])
-        self.str_color = 'BkColor=%s' % hex_to_rgb(self.color)
+        self.str_color = 'BkColor=%s' % color_convert(self.color)
         self.str_content = 'Content='
 
         if self.actions:
@@ -163,24 +174,24 @@ class PlayItButton(tk.Label):
                             self.actions[key][1] + \
                             playit_content[key][1]
 
-    def plt_set(self, attr_list):
+    def plt_set(self, plt_id, text=None, content=None, color='#FFFFFF'):
         self.exist = True
-        self.id = attr_list[0] + '_' + attr_list[1]
-        self.text = attr_list[2]
+        self.id = plt_id
+        self.text = text
 
         try:
-            self.actions = {key: [attr_list[3][key][3].get(),
-                                  attr_list[3][key][4].get()]
-                            for key in attr_list[3].keys()}
+            self.actions = {key: [content[key][3].get(),
+                                  content[key][4].get()]
+                            for key in content.keys()}
         except AttributeError:
             self.actions = None
         # TODO: there occurs list 'index out of range' error. Must be fix.
         except Exception as e:
             print(e)
 
-        self.color = attr_list[4]
+        self.color = color
 
-        self._gen_config()
+        self._button_configure()
         self.config(
             text=self.str_title[
                  self.str_title.find('=') + 1:].replace('\\n', '\n'),
@@ -231,6 +242,7 @@ class PlayItEditButton:
     """
     docs
     """
+
     # TODO: must be use in standalone and create once.
 
     def __init__(self, root, button, act):
@@ -329,11 +341,10 @@ class PlayItEditButton:
 
     def _configure(self):
         self.plt_button.plt_set(
-            ('ART',
-             self.plt_btn_article.get(),
-             self.plt_btn_text.get(),
-             self.actions_dict,
-             self.plt_btn_color.get(), )
+            'ART_'+self.plt_btn_article.get(),
+            self.plt_btn_text.get(),
+            self.actions_dict,
+            self.plt_btn_color.get(),
         )
         self.edit_window.destroy()
 

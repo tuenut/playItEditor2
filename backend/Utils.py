@@ -1,15 +1,21 @@
-def hex_to_rgb(hex_color):
-    """Return 'red, green, blue' for the color given as #rrggbb."""
-    hex_color = hex_color.lstrip('#')
+import re
 
-    if len(hex_color) == 6:
-        rgb_color = ','.join(
-            map(lambda x: str(int(x, 16)),
-                [hex_color[value:value + 6 // 3]
-                 for value in range(0, 6, 2)])
-        )
+
+def color_convert(color):
+    """Return 'red, green, blue' for the color given as #rrggbb."""
+    color = color.replace(' ', '')
+
+    if (color[0] == '#' and len(color) == 7) or (
+            len(color) == 6 and not re.search(r' |,|\.', color)):
+        color = color.lstrip('#')
+
+        values = [color[value:value + 6 // 3] for value in range(0, 6, 2)]
+        rgb_color = ','.join(map(lambda x: str(int(x, 16)), values))
 
         return rgb_color
+
+    elif len(color.split(',')) == 3:
+        return '#'+''.join([hex(int(val))[2:] for val in color.split(',')])
 
     else:
         return False

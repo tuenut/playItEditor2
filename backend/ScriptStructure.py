@@ -1,6 +1,6 @@
-﻿from configparser import RawConfigParser
-import os
-
+﻿import os
+import re
+from configparser import RawConfigParser
 
 PATH_TO_PLT = os.path.abspath('\\\\170-csb\\Stand_KRS\\daten\\mpy\\')
 MENU_NAME = 'menu.plt'
@@ -94,13 +94,46 @@ class FileStructure:
         # TODO: FileStructure.save()
         pass
 
+    def get_buttons(self, macro_name):
+        buttons = {}
+
+        for section in self.macros[macro_name].sections():
+            if section == 'Entry':
+                for key in self.macros[macro_name][section]:
+                    param_value = self.macros[macro_name][section][key]
+                    comment_index = re.search(';|#', param_value)
+                    if comment_index:
+                        re_gr = comment_index.group(0)
+                        param_value = param_value[
+                                      :param_value.index(re_gr)].rstrip(' ')
+
+                    param_value = tuple(param_value.split(','))
+                    buttons.update({key.upper(): {"position": param_value}})
+
+            elif section not in ('Ctrl', 'Entry'):
+                buttons[section].update(
+                    dict(self.macros[macro_name].items(section)))
+
+        return buttons
+
 
 if __name__ == '__main__':
     a = FileStructure('_example.py')
-    print(a.open())
+    a.open()
+    for filename in a.macros:
+        b = a.get_buttons(filename)
+        print(b)
+    print(a.macros)
 
-    for key in a.__dict__:
-        print(key, ': ', a.__dict__[key])
+
+    # for filename in a.macros:
+    #     print(filename)
+    #     for section in a.macros[filename].sections():
+    #         if section not in ('Ctrl', 'Entry'):
+    #             pass
+
+
+
 
     # for m in a.macros:
     #     print(m, ':')

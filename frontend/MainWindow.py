@@ -37,9 +37,9 @@ class MainAppWindow(RootWindow):
         self.make_main_menu()
         self.menu_items_objects['Файл'].entryconfigure(
             'Сохранить', state=tk.DISABLED)
-        self.__gen_right_pane()
+        self.__gen_view()
 
-    def __gen_right_pane(self):
+    def __gen_view(self):
         # Right pane. Editor view
         self.view_frame = tk.Frame(self.main_frame,
                                    bg='light grey',
@@ -75,7 +75,7 @@ class MainAppWindow(RootWindow):
             lambda event: self.view_canvas.config(
                 scrollregion=self.view_canvas.bbox('all'), ))
 
-        ButtonsView(self.view_inner_frame)
+        self.edit_tab = ButtonsView(self.view_inner_frame)
 
     def __new_file(self):
         for child in self.view_inner_frame.winfo_children():
@@ -96,6 +96,11 @@ class MainAppWindow(RootWindow):
 
                 playit_process = FileStructure(self.__open_file_path)
                 playit_process.open()
+
+                for key in playit_process.macros:
+                    if 'menu' in key:
+                        buttons = playit_process.get_buttons(key)
+                        self.edit_tab.load(buttons)
 
     def __save_file(self):
         self.__save_file_path = asksaveasfilename(
