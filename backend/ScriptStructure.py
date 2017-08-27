@@ -1,4 +1,5 @@
-﻿import os
+﻿import logging
+import os
 import re
 from configparser import RawConfigParser
 
@@ -44,6 +45,8 @@ class FileStructure:
     # TODO: добавить обработку исключения, когда нет поддиректорий
 
     def __init__(self, path_to_init_file):
+        self.logger = logging.getLogger('.'.join(['__main__', __name__]))
+
         name = os.path.basename(path_to_init_file)
 
         self.plt_name = name.replace('.py', '')
@@ -63,15 +66,17 @@ class FileStructure:
     def open(self):
         """For open exist script and get structure"""
         if not os.access(self.directory_path, os.F_OK):
-            print("Can't access to directory %s" % self.directory_path)
+            self.logger.warning("Can't access to directory %s" %
+                                self.directory_path)
             return 1
 
         for path, dir_names, file_names in os.walk(self.directory_path):
             for file_name in file_names:
                 if (
-                                    '.PLT' in file_name
-                            and self.exclude not in file_name
-                        and not os.path.isdir(self.directory_path + file_name)
+                                re.search('(?i)plt$', file_name)
+                            and not re.search('(?i)bak',
+                                              path + file_name)
+                        and not os.path.isdir(path + file_name)
                 ):
                     name = os.path.join(path, file_name)
                     macro = RawConfigParser()
@@ -99,8 +104,8 @@ class FileStructure:
 
         for section in self.macros[macro_name].sections():
             if section == 'Entry':
-                for key in self.macros[macro_name][section]:
-                    param_value = self.macros[macro_name][section][key]
+                for parameter in self.macros[macro_name][section]:
+                    param_value = self.macros[macro_name][section][parameter]
                     comment_index = re.search(';|#', param_value)
                     if comment_index:
                         re_gr = comment_index.group(0)
@@ -108,7 +113,7 @@ class FileStructure:
                                       :param_value.index(re_gr)].rstrip(' ')
 
                     param_value = tuple(param_value.split(','))
-                    buttons.update({key.upper(): {"position": param_value}})
+                    buttons.update({parameter.upper(): {"position": param_value}})
 
             elif section not in ('Ctrl', 'Entry'):
                 buttons[section].update(
@@ -124,16 +129,6 @@ if __name__ == '__main__':
         b = a.get_buttons(filename)
         print(b)
     print(a.macros)
-
-
-    # for filename in a.macros:
-    #     print(filename)
-    #     for section in a.macros[filename].sections():
-    #         if section not in ('Ctrl', 'Entry'):
-    #             pass
-
-
-
 
     # for m in a.macros:
     #     print(m, ':')

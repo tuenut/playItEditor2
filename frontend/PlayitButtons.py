@@ -1,3 +1,5 @@
+import logging
+import re
 import tkinter as tk
 from collections import OrderedDict
 
@@ -12,6 +14,8 @@ swap_1st_button = None
 
 class ButtonsView:
     def __init__(self, parent=None):
+        self.logger = logging.getLogger('.'.join(['__main__', __name__]))
+
         self.parent = parent
         self.plt_grid_cells = [[None for row in range(8)] for col in range(5)]
 
@@ -23,17 +27,15 @@ class ButtonsView:
         # generate grid
         for row in range(5):
             for col in range(8):
-                cell = tk.Frame(self.parent, height=160, width=160,
+                cell = tk.Frame(self.parent, height=162, width=162,
                                 bd=1, relief=tk.SUNKEN)
                 cell.grid(row=row, column=col)
                 cell.grid_propagate(False)
-                cell.grid_rowconfigure(0, minsize=160)
-                cell.grid_columnconfigure(0, minsize=160)
+                cell.grid_rowconfigure(0, minsize=162)
+                cell.grid_columnconfigure(0, minsize=162)
 
-                cell = PlayItButton(self.popup_menu.popup, cell)
-                print(cell)
-
-                self.plt_grid_cells[row][col] = cell
+                self.plt_grid_cells[row][col] = PlayItButton(
+                    self.popup_menu.popup, cell)
 
     def load(self, buttons):
         # TODO: make method for gen buttons from FileStructure.macros
@@ -41,15 +43,20 @@ class ButtonsView:
         for button_id in buttons:
             button = buttons[button_id]
             plt_button = self.plt_grid_cells[
-                int(button['position'][0])-1][
-                int(button['position'][1])-1]
+                int(button['position'][0]) - 1][
+                int(button['position'][1]) - 1]
 
-            print(buttons[button_id]['bkcolor'])
-            plt_button.plt_set(plt_id=button_id,
-                               text=buttons[button_id]['title'],
-                               color=color_convert(buttons[button_id]['bkcolor']))
+            actions = [key.split('}') for key in button['content'].split('{')]
+            # print('load: ', str(actions))
 
-        pass
+            # обратное преобразование действий в строку для plt
+            # '{'.join(list(map(lambda x: '}'.join(x), actions)))
+
+            plt_button.button_set(plt_id=button_id,
+                                  text=buttons[button_id]['title'],
+                                  color=color_convert(
+                                      buttons[button_id]['bkcolor']),
+                                  content=actions)
 
 
 class PopupButtonMenu:
@@ -76,7 +83,7 @@ class PopupButtonMenu:
 
     def delete_button(self):
         if self.button:
-            self.button.plt_del()
+            self.button.button_clear()
 
 
 class PlayItButton(tk.Label):
@@ -89,25 +96,31 @@ class PlayItButton(tk.Label):
      method and method to attach popup menu to any button.
      """
 
+    PLAYIT_CONTENT = OrderedDict([
+        ('kst-1', ['{CSB LA0052M1|kst-1}', '{Enter}']),
+        ('typ1', ['{CSB LA2251M2|typ1}', '{Enter}']),
+        ('typ2', ['{CSB LA2251M2|typ2}', '{Enter}']),
+        ('typ3', ['{CSB LA2251M2|typ3}', '{F4}']),
+        ('art', ['{CSB LA0052M1|art}', '{Enter}']),
+        ('mpe', ['{CSB LA0052M1|mpe}', '{Enter}']),
+        ('tara', ['{CSB LA0052M1|tara}', '{Enter}']),
+        ('kst-2', ['{CSB LA0052M1|kst-2}', '{Enter}']),
+    ])
+
     # TODO: change default "parent" to non-default argument
-    def __init__(self, popup, parent=None):
-        tk.Label.__init__(self, parent,
-                          font=('Consolas', 14),
-                          bd=1, relief=tk.RAISED, )
+    def __init__(self, popup, parent):
+        self.logger = logging.getLogger('.'.join(['__main__', __name__]))
 
-        self.exist = False
+        tk.Label.__init__(self, parent, font=('Consolas', 14), bd=1,
+                          relief=tk.RAISED, )
 
+        # self.exist = False
         self.id = None
+        self.type = None
+        self.section_id = None
         self.text = None
         self.color = None
         self.actions = None
-
-        self.str_position = None
-        self.str_section = None
-        self.str_id = None
-        self.str_title = None
-        self.str_content = None
-        self.str_color = None
 
         self.grid(sticky='wens', row=0, column=0)
 
@@ -118,124 +131,99 @@ class PlayItButton(tk.Label):
         # TODO: Проверить, если надо - пофиксить перенос действий plt_actions
         global swap_1st_button
 
-        # button must be setup. Cant move empty button.
-        if not swap_1st_button and self.exist:
+        # button must be button_set. Cant move empty button.
+        if not swap_1st_button and self.id:
             swap_1st_button = self
         elif swap_1st_button:
             data_1st_button = swap_1st_button.plt_get
 
-            if self.exist:
-                swap_1st_button.plt_set(self.plt_get)
+            if self.id:
+                swap_1st_button.button_set(self.plt_get)
             else:
-                swap_1st_button.plt_del()
+                swap_1st_button.button_clear()
 
-            self.plt_set(data_1st_button)
+            print(data_1st_button)
+            self.button_set(plt_id=data_1st_button[0],
+                            plt_type=data_1st_button[1],
+                            text=data_1st_button[2],
+                            content=data_1st_button[3],
+                            color=data_1st_button[4])
 
             swap_1st_button = None
 
-    def _button_configure(self):
-        # TODO: ??? may be move to plt_get_strings() for don't store in memory
-        playit_content = OrderedDict([
-            ('kst-1', ['{CSB LA0052M1|kst-1}', '{Enter}']),
-            ('typ1', ['{CSB LA2251M2|typ1}', '{Enter}']),
-            ('typ2', ['{CSB LA2251M2|typ2}', '{Enter}']),
-            ('typ3', ['{CSB LA2251M2|typ3}', '{F4}']),
-            ('art', ['{CSB LA0052M1|art}', '{Enter}']),
-            ('mpe', ['{CSB LA0052M1|mpe}', '{Enter}']),
-            ('tara', ['{CSB LA0052M1|tara}', '{Enter}']),
-            ('kst-2', ['{CSB LA0052M1|kst-2}', '{Enter}']),
-        ])
-
-        self.str_position = '%s=%s' % (
-            self.id, str((self.master.grid_info()['row'] + 1,
-                          self.master.grid_info()['column'] + 1))[1:][:-1])
-        self.str_section = '[%s]' % self.id
-        self.str_id = 'Id=%s' % self.id
-        self.str_title = 'Title=%s\\n\\n%s' % (
-            title_convert(self.text),
-            self.id[self.id.find('_') + 1:])
-        self.str_color = 'BkColor=%s' % color_convert(self.color)
-        self.str_content = 'Content='
-
-        if self.actions:
-            for key in playit_content:
-                try:
-                    key, self.actions[key]
-                except KeyError:
-                    if key == 'art':
-                        self.str_content += \
-                            playit_content[key][0] + \
-                            self.id.lstrip().lstrip('ART_') + \
-                            playit_content[key][1]
-                else:
-                    if self.actions[key][0]:
-                        self.str_content += \
-                            playit_content[key][0] + \
-                            self.actions[key][1] + \
-                            playit_content[key][1]
-
-    def plt_set(self, plt_id, text=None, content=None, color='#FFFFFF'):
-        self.exist = True
+    def button_set(self, plt_id, plt_type='ART', text=None, content=None,
+                   color='#FFFFFF'):
         self.id = plt_id
-        self.text = text
-
-        try:
-            self.actions = {key: [content[key][3].get(),
-                                  content[key][4].get()]
-                            for key in content.keys()}
-        except AttributeError:
-            self.actions = None
-        # TODO: there occurs list 'index out of range' error. Must be fix.
-        except Exception as e:
-            print(e)
-
+        self.type = plt_type
+        self.section_id = str(self.type) + '_' + str(self.id)
         self.color = color
 
-        self._button_configure()
-        self.config(
-            text=self.str_title[
-                 self.str_title.find('=') + 1:].replace('\\n', '\n'),
-            bg=self.color)
+        text = re.sub('^ +| +$', '', text)
+        text = re.sub('[0-9]{6}$', '', text)
+        text = re.sub('\n|\\\\n', ' ', text)
+        self.text = text
 
-    def plt_del(self):
-        self.exist = False
+        self.actions = content
+
+        self.config(text=title_convert(self.text) + '\n\n' + self.id,
+                    bg=self.color)
+
+        # print('actions: ', str(self.actions))
+
+    def button_clear(self):
+        # self.exist = False
 
         self.id = None
+        self.type = None
+        self.section_id = None
         self.text = None
         self.color = None
-
-        self.str_position = None
-        self.str_section = None
-        self.str_id = None
-        self.str_title = None
-        self.str_content = None
-        self.str_color = None
+        self.actions = None
 
         self.config(text='', bg='SystemButtonFace')
 
     @property
     def plt_get_strings(self):
-        return (self.str_position,
-                self.str_section,
-                self.str_id,
-                self.str_title,
-                self.str_content,
-                self.str_color)
+        str_position = '%s=%s' % (
+            self.section_id,
+            str((self.master.grid_info()['row'] + 1,
+                 self.master.grid_info()['column'] + 1))[1:][:-1]
+        )
+        str_section = '[%s]' % self.section_id
+        str_id = 'Id=%s' % self.section_id
+        str_title = 'Title=%s' % title_convert(self.text)
+        if self.type == 'ART':
+            str_title = str_title + '\n\n' + self.id
+        str_color = 'BkColor=%s' % color_convert(self.color)
+        str_content = 'Content='
+
+        # TODO: Переделать так, чтобы уйти от лишней проверки на артикул
+        if self.actions:
+            for key in self.PLAYIT_CONTENT:
+                try:
+                    key, self.actions[key]
+                except KeyError:
+                    if key == 'art':
+                        str_content += \
+                            self.PLAYIT_CONTENT[key][0] + \
+                            self.id + \
+                            self.PLAYIT_CONTENT[key][1]
+                    if self.actions[key][0]:
+                        str_content += \
+                            self.PLAYIT_CONTENT[key][0] + \
+                            self.actions[key][1] + \
+                            self.PLAYIT_CONTENT[key][1]
+
+        return (str_position,
+                str_section,
+                str_id,
+                str_title,
+                str_content,
+                str_color)
 
     @property
     def plt_get(self):
-        try:
-            plt_type, article = self.id.split('_')
-        except AttributeError:
-            plt_type, article = '', ''
-        except Exception as e:
-            print('In %s in method <plt_get>: %s' % (self, e))
-            return 1
-        return (plt_type,
-                article,
-                self.text,
-                self.actions,
-                self.color)
+        return self.id, self.type, self.text, self.actions, self.color
 
 
 class PlayItEditButton:
@@ -258,6 +246,12 @@ class PlayItEditButton:
         main_frame = tk.Frame(self.edit_window, bd=1)
         main_frame.pack()
 
+        # Define variables
+        self.plt_btn_text = tk.StringVar()
+        self.plt_btn_article = tk.StringVar()
+        self.plt_btn_color = tk.StringVar()
+        self.plt_btn_color.set('#757575')
+
         # Falling list for choose type of button
         plt_btn_type = FallingList(main_frame, left_text='Тип кнопки',
                                    items=('', 'Кнопка', 'Группа', 'Подгруппа'))
@@ -271,21 +265,11 @@ class PlayItEditButton:
             main_frame, text='Настройки кнопки', padx=4, pady=4)
         self.settings_frame.grid(row=1, column=0, columnspan=2, sticky='wens')
 
-        # Define variables
-        self.plt_btn_text = tk.StringVar()
-        self.plt_btn_article = tk.StringVar()
-        self.plt_btn_color = tk.StringVar()
-
-        self.plt_btn_color.set('#757575')
-
         # Getting data from button if configured
-        current_attributes = self.plt_button.plt_get
-        if current_attributes[1]:
-            self.plt_btn_article.set(current_attributes[1])
-        if current_attributes[2]:
-            self.plt_btn_text.set(current_attributes[2])
-        if current_attributes[4]:
-            self.plt_btn_color.set(current_attributes[4])
+        if self.plt_button.id:
+            self.plt_btn_article.set(self.plt_button.id)
+            self.plt_btn_text.set(self.plt_button.text)
+            self.plt_btn_color.set(self.plt_button.color)
 
         # Creating labels and fields for button settings
         entry_text_lbl = tk.Label(
@@ -302,25 +286,38 @@ class PlayItEditButton:
             self.settings_frame, bg=self.plt_btn_color.get(), bd=1,
             relief=tk.GROOVE, )
 
-        # Actions setup frame
+        # Actions button_set frame
         # TODO: !!! подгружать действия из параметров кнопки
         actions_pick_frame = tk.LabelFrame(main_frame,
                                            text='Выбор действий',
                                            padx=4, pady=4)
-        self.actions_dict = OrderedDict([
-            ('kst-1', ['Место отгрузки', actions_pick_frame, None, ]),
-            ('kst-2', ['Место назначения', actions_pick_frame, None, ]),
-            ('mpe', ['Вес', actions_pick_frame, None, ]),
-            ('tara', ['Тара', actions_pick_frame, None, ]),
-            ('typ1', ['Номер партии', actions_pick_frame, None, ]),
-            ('typ2', ['Дата партии', actions_pick_frame, None, ]),
-            ('typ3', ['Номер серии', actions_pick_frame, None, ]),
-        ])
-        RootWindow.gen_checkboxes(self.actions_dict)
+        content_checkbox_opt = [
+            {'action': 'CSB LA0052M1|kst-1', 'text': 'Место отгрузки',
+             'value': True, },
+            {'action': 'CSB LA2251M2|typ1', 'text': 'Номер партии', },
+            {'action': 'CSB LA2251M2|typ2', 'text': 'Дата партии', },
+            {'action': 'CSB LA2251M2|typ3', 'text': 'Номер серии', },
+            {'action': 'CSB LA2251M2|kst-2', 'text': 'Место назначения',
+             'value': True, },
+        ]
+
+        self.content = {}
+        row = 0
+        for key in content_checkbox_opt:
+            self.content[key['action']] = RootWindow.gen_checkboxes(
+                actions_pick_frame, **key, row=row)
+            row += 1
+
+        if self.plt_button.actions:
+            for action in self.plt_button.actions:
+                self.content[action][2].set(True)
+                self.content[action][3].set(action[1])
 
         # OK button
         btn_add_plt_button = tk.Button(
             main_frame, text='Ок', command=self._configure)
+        btn_cancel = tk.Button(
+            main_frame, text='Cancel', command=self.edit_window.destroy)
 
         # Packing with grid()
         entry_text_lbl.grid(row=2, column=0, sticky='wens')
@@ -331,7 +328,8 @@ class PlayItEditButton:
         self.color_palette.grid(row=4, column=1, sticky='wens')
         self.color_palette.bind('<Button-1>', self._color_pick_dialog)
         actions_pick_frame.grid(row=6, column=0, columnspan=2, sticky='wens')
-        btn_add_plt_button.grid(row=7, column=0, columnspan=2, sticky='wens')
+        btn_add_plt_button.grid(row=7, column=0, sticky='wens')
+        btn_cancel.grid(row=7, column=1, sticky='wens')
 
         x, y = get_mouse_pos(self.root)
         self.edit_window.geometry('+%d+%d' % (x - 70, y - 60))
@@ -340,13 +338,20 @@ class PlayItEditButton:
         self.edit_window.grab_set()
 
     def _configure(self):
-        self.plt_button.plt_set(
-            'ART_'+self.plt_btn_article.get(),
-            self.plt_btn_text.get(),
-            self.actions_dict,
-            self.plt_btn_color.get(),
-        )
-        self.edit_window.destroy()
+        # TODO: make more efficient check for button_set article.
+        content = [[key, self.content[key][3].get()]
+                   for key in self.content
+                   if self.content[key][2].get() and self.content[key][3].get()
+                   ]
+        print(content)
+        if self.plt_btn_article.get():
+            self.plt_button.button_set(
+                plt_id=self.plt_btn_article.get(),
+                text=self.plt_btn_text.get(),
+                content=content,
+                color=self.plt_btn_color.get(),
+            )
+            self.edit_window.destroy()
 
     def set_color(self, event_color_pick):
         """Set background color for button"""

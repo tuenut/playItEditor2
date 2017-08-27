@@ -21,7 +21,7 @@ class RootWindow:
 
         self.main_menu = tk.Menu(self.root)
 
-        self.main_frame = tk.Frame(self.root, bg='green')
+        self.main_frame = tk.Frame(self.root)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
     def make_main_menu(self, ):
@@ -57,61 +57,63 @@ class RootWindow:
             self.main_menu.add_cascade(label=item, menu=sub_menu)
 
     @staticmethod
-    def gen_checkboxes(checkbox_items):
-        """
-        Method generate block of checkboxes from OrderedDict:
-        OrderedDict([
-                ('NAME', [frame, cmd, ])
-                ])
+    def gen_checkboxes(parent, row=0, **kwargs):
+        var_bool = tk.BooleanVar()
+        var_text = tk.StringVar()
 
-        Also add a variable object of checkbox to dict after create checkbox.
-        """
-        row = 0
-        for key in checkbox_items.keys():
-            var = tk.BooleanVar()
-            var_text = tk.StringVar()
-            frm = checkbox_items[key][1]
-            cmd = checkbox_items[key][2]
-            checkbox = tk.Checkbutton(frm, text=checkbox_items[key][0],
-                                      variable=var,
-                                      offvalue=False,
-                                      onvalue=True, command=cmd,
-                                      compound=tk.LEFT, anchor=tk.W)
-            checkbox.grid(row=row, column=0, sticky='wens')
-            checkbox_items[key].append(var)
+        checkbox = tk.Checkbutton(parent, variable=var_bool,
+                                  onvalue=True, offvalue=False,
+                                  compound=tk.LEFT, anchor=tk.W,
+                                  )
+        text_entry = tk.Entry(parent, textvariable=var_text, width=6)
 
-            text_entry = tk.Entry(frm, textvariable=var_text, width=6)
-            text_entry.grid(row=row, column=1, )
-            checkbox_items[key].append(var_text)
+        for key in kwargs.keys():
+            if key == 'text':
+                checkbox.configure(text=kwargs['text'])
+            elif key == 'state' and kwargs['state'] in (tk.DISABLED,
+                                                        tk.ACTIVE,
+                                                        tk.NORMAL):
+                    checkbox.configure(state=kwargs['state'])
+            elif key == 'value' and kwargs['value']:
+                checkbox.select()
+            elif key == 'command':
+                checkbox.configure(command=kwargs['command'])
+            elif key == 'data':
+                var_text.set(kwargs['data'])
 
-            row += 1
+        checkbox.grid(row=row, column=0, sticky='wens')
+        text_entry.grid(row=row, column=1, )
+
+        return checkbox, text_entry, var_bool, var_text
 
 
 class FallingList:
     """Class for generate falling lists with ttk.Combobox."""
+
     # TODO: add methods for different pack methods
 
     def __init__(self, parent_frame, left_text=None, top_text=None,
-                 items=('Добавьте элементы', ), default_value=None, width=None):
+                 items=('Добавьте элементы',), default_value=None, width=None):
         self.left_text = left_text
         self.top_text = top_text
         self.root = parent_frame
 
         self.frame = tk.Frame(self.root)
         self.falling_list = Combobox(self.frame,
-                                     width=width, values=items, state='readonly')
+                                     width=width, values=items,
+                                     state='readonly')
         if default_value:
             self.falling_list.set(default_value)
         else:
             self.falling_list.set(items[0])
 
-        # if top_text:
-        #     tk.Label(self.frame, text=self.top_text).pack(tk.TOP)
-        # tk.Label(self.frame,
-        #          text=self.left_text,
-        #          anchor=tk.S).pack(side=tk.LEFT, fill=tk.Y)
-        # self.falling_list.pack(side=tk.RIGHT)
-        # # self.frame.grid()
+            # if top_text:
+            #     tk.Label(self.frame, text=self.top_text).pack(tk.TOP)
+            # tk.Label(self.frame,
+            #          text=self.left_text,
+            #          anchor=tk.S).pack(side=tk.LEFT, fill=tk.Y)
+            # self.falling_list.pack(side=tk.RIGHT)
+            # # self.frame.grid()
 
     @property
     def getval(self):
