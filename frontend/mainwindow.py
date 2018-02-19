@@ -1,20 +1,20 @@
 import logging
 import tkinter as tk
 import tkinter.ttk as ttk
-from collections import OrderedDict
-from tkinter.filedialog import askopenfilename, asksaveasfilename
-from os.path import basename
+import collections
+import tkinter.filedialog
+import os.path
 
-from backend.ScriptStructure import FileStructure
-from frontend.GuiFramework import RootWindow, AboutWindow
-from frontend.PlayitButtons import ButtonsView
+import backend.scriptstructure as ss
+import frontend.GUIframework as GUI
+import frontend.pltbtn as pltbtn
+
+logger = logging.getLogger('.'.join(['__main__', __name__]))
 
 
-class MainAppWindow(RootWindow):
+class MainAppWindow(GUI.RootWindow):
     def __init__(self):
-        self.logger = logging.getLogger('.'.join(['__main__', __name__]))
-
-        RootWindow.__init__(self, title='Редактор PlayIt', geo='1303x823')
+        GUI.RootWindow.__init__(self, title='Редактор PlayIt', geo='1303x823')
 
         self.__open_file_path = None
         self.__save_file_path = None
@@ -23,17 +23,17 @@ class MainAppWindow(RootWindow):
 
         # Creating menu line.
         self.menu_items_layout.update(
-            OrderedDict([
-                ('Файл', [OrderedDict([
+            collections.OrderedDict([
+                ('Файл', [collections.OrderedDict([
                     ('Новый', self.__new_file),
                     ('_separator', None),
                     ('Открыть', self.__load_file),
                     ('Сохранить', self.__save_file),
                     ('_separator2', None),
-                    ('Показать конфиг', None),
+                    ('Показать конфиг', self.print_config),
                 ])]),
-                ('Помощь', [OrderedDict([
-                    ('О программе', lambda: AboutWindow(
+                ('Помощь', [collections.OrderedDict([
+                    ('О программе', lambda: GUI.AboutWindow(
                         '', '\nРазработчик: Артем Грошев\n'))
                 ])])
             ])
@@ -50,9 +50,9 @@ class MainAppWindow(RootWindow):
         try:
             tabs = list(self.edit_tabs)
         except TypeError:
-            self.logger.exception('TypeError')
+            logger.exception('TypeError')
         except Exception as e:
-            self.logger.exception(e)
+            logger.exception(e)
         else:
             for tab in tabs:
                 for child in \
@@ -74,14 +74,14 @@ class MainAppWindow(RootWindow):
         self.edit_tabs['New'].pack()
 
     def __load_file(self):
-        self.__open_file_path = askopenfilename(
+        self.__open_file_path = tkinter.filedialog.askopenfilename(
             filetypes=(("PlayIt files", "*.py"),))
         if self.__open_file_path:
             self.root.title(self.__open_file_path)
             self.menu_items_objects['Файл'].entryconfigure(
                 'Сохранить', state=tk.NORMAL)
 
-            playit_process = FileStructure(self.__open_file_path)
+            playit_process = ss.FileStructure(self.__open_file_path)
             playit_process.open()
 
             # Clearing up tabs dict
@@ -94,11 +94,11 @@ class MainAppWindow(RootWindow):
                     self.nb.forget(tab)
 
             for key in playit_process.macros:
-                self.logger.debug(key)
+                logger.debug(key)
 
                 new_tab_frame = ttk.Frame(self.main_frame)
                 new_tab_frame.pack()
-                self.nb.add(new_tab_frame, text=basename(key),
+                self.nb.add(new_tab_frame, text=os.path.basename(key),
                             underline=0, padding=2)
                 buttons = playit_process.get_buttons(key)
                 self.edit_tabs[key] = EditView(new_tab_frame)
@@ -108,9 +108,13 @@ class MainAppWindow(RootWindow):
                 self.edit_tabs[key].pack()
 
     def __save_file(self):
-        self.__save_file_path = asksaveasfilename(
+        self.__save_file_path = tkinter.filedialog.asksaveasfilename(
             filetypes=(("PlayIt files", "*.plt"),),
             defaultextension="*.plt")
+
+    def print_config(self):
+        for tab in self.edit_tabs:
+            self.edit_tabs[tab].edit_tab.print_config()
 
 
 class EditView:
@@ -156,7 +160,7 @@ class EditView:
             lambda event: self.view_canvas.config(
                 scrollregion=self.view_canvas.bbox('all'), ))
 
-        self.edit_tab = ButtonsView(self.view_inner_frame)
+        self.edit_tab = pltbtn.ButtonsView(self.view_inner_frame)
 
     def pack(self):
         self.frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)

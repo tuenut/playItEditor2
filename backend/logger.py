@@ -20,13 +20,14 @@ def make_logger(log_lvl):
             logging.exception('%s %s', e.strerror, e.filename)
 
     formatter = logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s')
+        '%(asctime)s %(levelname)s [%(module)s:%(lineno)d]: %(message)s')
     logging.addLevelName(100, 'MESSAGE')
 
     # add StreamHandler aka console output
     stdout_logger = logging.StreamHandler(stdout)
     stdout_logger.setLevel(log_lvl)
     stdout_logger.setFormatter(formatter)
+    stdout_logger.filter(['INFO', 'WARNING', 'ERROR', 'CRITICAL'])
 
     logger = logging.getLogger('__main__')
     logger.setLevel(logging.DEBUG)

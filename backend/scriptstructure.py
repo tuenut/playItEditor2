@@ -73,9 +73,9 @@ class FileStructure:
         for path, dir_names, file_names in os.walk(self.directory_path):
             for file_name in file_names:
                 if (
-                                re.search('(?i)plt$', file_name)
-                            and not re.search('(?i)bak',
-                                              path + file_name)
+                        re.search('(?i)plt$', file_name)
+                        and not re.search('(?i)bak',
+                                          path + file_name)
                         and not os.path.isdir(path + file_name)
                 ):
                     name = os.path.join(path, file_name)
@@ -85,8 +85,8 @@ class FileStructure:
 
         for group_dir in sorted(os.listdir(self.directory_path)):
             if (
-                        os.path.isdir(os.path.join(self.directory_path,
-                                                   group_dir))
+                    os.path.isdir(os.path.join(self.directory_path,
+                                               group_dir))
                     and self.exclude not in group_dir
             ):
                 name = os.path.join(self.directory_path, group_dir)
@@ -113,7 +113,8 @@ class FileStructure:
                                       :param_value.index(re_gr)].rstrip(' ')
 
                     param_value = tuple(param_value.split(','))
-                    buttons.update({parameter.upper(): {"position": param_value}})
+                    buttons.update(
+                        {parameter.upper(): {"position": param_value}})
 
             elif section not in ('Ctrl', 'Entry'):
                 buttons[section].update(
