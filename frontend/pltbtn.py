@@ -40,14 +40,44 @@ class ButtonsView:
         # must gen only for one view/widget.
         for button_id in buttons:
             button = buttons[button_id]
-            plt_button = self.plt_grid_cells[
-                int(button['position'][0]) - 1][
-                int(button['position'][1]) - 1]
+            row = int(button['position'][0]) - 1
+            col = int(button['position'][1]) - 1
+            try:
+                plt_button = self.plt_grid_cells[row][col]
+            except IndexError as e:
+                logger.debug(e)
 
-            plt_button.button_set(plt_id=button_id,
-                                  text=button['title'],
-                                  color=button['bkcolor'],
-                                  actions=button['content'])
+                # TODO доделать обработку кнопки за пределами диапазона
+                toplevel = tk.Toplevel(self.parent)
+                h = toplevel.winfo_screenheight()
+                w = toplevel.winfo_screenheight()
+                toplevel.geometry('200x100+%d+%d' % ((w + 200) / 2, (h - 100) / 2))
+                toplevel.title('Внимание!!')
+                message = tk.Message(
+                    toplevel,
+                    text='Обнаружен элемент за пределами области окрана',
+                    width=180
+                )
+                button_ok = tk.Button(
+                    toplevel,
+                    text='Ok',
+                    command=toplevel.destroy
+                )
+
+                message.pack()
+                button_ok.pack()
+
+                toplevel.focus_set()
+                toplevel.grab_set()
+
+                self.parent.wait_window(toplevel)
+            else:
+                plt_button.button_set(
+                    plt_id=button_id,
+                    text=button['title'],
+                    color=button['bkcolor'],
+                    actions=button['content']
+                )
 
     def print_config(self):
         for row in self.plt_grid_cells:

@@ -1,9 +1,9 @@
-import logging
-import tkinter as tk
-import tkinter.ttk as ttk
 import collections
-import tkinter.filedialog
+import logging
 import os.path
+import tkinter as tk
+import tkinter.filedialog
+import tkinter.ttk as ttk
 
 import backend.scriptstructure as ss
 import frontend.GUIframework as GUI
@@ -14,7 +14,7 @@ logger = logging.getLogger('.'.join(['__main__', __name__]))
 
 class MainAppWindow(GUI.RootWindow):
     def __init__(self):
-        GUI.RootWindow.__init__(self, title='Редактор PlayIt', geo='1303x823')
+        GUI.RootWindow.__init__(self, title='Редактор PlayIt', geo='1280x768')
 
         self.__open_file_path = None
         self.__save_file_path = None
@@ -42,9 +42,13 @@ class MainAppWindow(GUI.RootWindow):
         self.menu_items_objects['Файл'].entryconfigure(
             'Сохранить', state=tk.DISABLED)
 
+        # TODO: перенести функционал редактирования в панель
+        self.control_panel = tk.Frame(self.main_frame, width=200)
+        self.control_panel.pack(side=tk.LEFT, fill=tk.Y, )
+
         self.nb = ttk.Notebook(self.main_frame)
         self.nb.enable_traversal()
-        self.nb.pack(fill=tk.BOTH, expand=tk.Y)
+        self.nb.pack(side=tk.RIGHT, fill=tk.BOTH, expand=tk.Y)
 
     def __new_file(self):
         try:
@@ -60,7 +64,7 @@ class MainAppWindow(GUI.RootWindow):
                     if 'menu' not in child.winfo_name():
                         child.winfo_children()[0].button_clear()
 
-                self.edit_tabs[tab].forget()
+                self.edit_tabs[tab].custom_destroy()
                 del self.edit_tabs[tab]
 
         for tab in self.nb.tabs():
@@ -84,10 +88,10 @@ class MainAppWindow(GUI.RootWindow):
             playit_process = ss.FileStructure(self.__open_file_path)
             playit_process.open()
 
-            # Clearing up tabs dict
+            # Clean up tabs dict
             if self.edit_tabs:
                 for tab in list(self.edit_tabs):
-                    self.edit_tabs[tab].forget()
+                    self.edit_tabs[tab].custom_destroy()
                     del self.edit_tabs[tab]
 
                 for tab in self.nb.tabs():
@@ -98,8 +102,11 @@ class MainAppWindow(GUI.RootWindow):
 
                 new_tab_frame = ttk.Frame(self.main_frame)
                 new_tab_frame.pack()
-                self.nb.add(new_tab_frame, text=os.path.basename(key),
-                            underline=0, padding=2)
+                self.nb.add(
+                    new_tab_frame,
+                    text=os.path.basename(key).split('.')[0],
+                    underline=0,
+                    padding=2)
                 buttons = playit_process.get_buttons(key)
                 self.edit_tabs[key] = EditView(new_tab_frame)
                 self.edit_tabs[key].edit_tab.load(buttons)
@@ -122,48 +129,52 @@ class EditView:
         self.parent = parent
 
         # Right pane. Editor view
-        self.frame = tk.Frame(self.parent,
-                              bg='light grey',
-                              height=800, width=1140,
-                              bd=1, relief=tk.SUNKEN)
-
+        self.frame = tk.Frame(
+            self.parent,
+            bg='light grey',
+            height=800,
+            width=1140,
+            bd=1,
+            relief=tk.SUNKEN
+        )
         # Canvas for attach scroll to frame
         self.view_canvas = tk.Canvas(self.frame, bg='#888888')
         self.view_inner_frame = tk.Frame(self.view_canvas, bg='#BBBBBB')
 
-        self.view_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
-
-        # TODO: Fix the drawing scroll after render another tab.
-
-        # view_v_scroll = tk.Scrollbar(self.frame,
-        #                              orient=tk.VERTICAL,
-        #                              command=self.view_canvas.yview)
-        # view_h_scroll = tk.Scrollbar(self.frame,
-        #                              orient=tk.HORIZONTAL,
-        #                              command=self.view_canvas.xview)
-        #
-        # self.view_canvas.configure(yscrollcommand=view_v_scroll.set,
-        #                            xscrollcommand=view_h_scroll.set)
-        #
-        # view_v_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-        # view_h_scroll.pack(side=tk.BOTTOM, fill=tk.X)
-
+        view_v_scroll = tk.Scrollbar(
+            self.view_canvas,
+            orient=tk.VERTICAL,
+            command=self.view_canvas.yview
+        )
+        view_h_scroll = tk.Scrollbar(
+            self.view_canvas,
+            orient=tk.HORIZONTAL,
+            command=self.view_canvas.xview
+        )
+        self.view_canvas.configure(
+            yscrollcommand=view_v_scroll.set,
+            xscrollcommand=view_h_scroll.set
+        )
         self.view_canvas.create_window(
             (0, 0),
             window=self.view_inner_frame,
             anchor='nw',
             height=800, width=1288
         )
-
         self.view_inner_frame.bind(
             "<Configure>",
             lambda event: self.view_canvas.config(
-                scrollregion=self.view_canvas.bbox('all'), ))
-
+                scrollregion=self.view_canvas.bbox('all'),
+            )
+        )
         self.edit_tab = pltbtn.ButtonsView(self.view_inner_frame)
+        # Packing widgets
+        self.view_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+        view_h_scroll.place(rely=1, anchor=tk.SW, relwidth=1, width=-20)
+        view_v_scroll.place(relx=1, anchor=tk.NE, relheight=1, height=-20)
 
     def pack(self):
         self.frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
-    def forget(self):
-        self.frame.forget()
+    def custom_destroy(self):
+        self.frame.destroy()

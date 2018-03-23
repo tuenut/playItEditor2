@@ -117,8 +117,13 @@ class FileStructure:
                         {parameter.upper(): {"position": param_value}})
 
             elif section not in ('Ctrl', 'Entry'):
-                buttons[section].update(
-                    dict(self.macros[macro_name].items(section)))
+                try:
+                    buttons[section].update(
+                        dict(self.macros[macro_name].items(section)))
+                except KeyError:
+                    pass
+                except Exception as e:
+                    logging.debug(e)
 
         return buttons
 

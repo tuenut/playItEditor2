@@ -20,7 +20,11 @@ def color_convert(color, direction):
         return rgb_color
 
     elif direction == 'rgb2hex':
-        return '#' + ''.join([hex(int(val))[2:] for val in color.split(',')])
+        hex_color = ''.join([hex(int(val))[2:] for val in color.split(',')])
+        if len(hex_color) < 6:
+            diff = 6 - len(hex_color)
+            hex_color = diff * '0' + hex_color
+        return '#' + hex_color
 
     else:
         return False
@@ -33,6 +37,7 @@ def title_convert(title, symbol='\n'):
     """
     # TODO: need to wrap only by spaces, don't split the words.
     if title:
+        title = title.replace('\\n', '\n')
         words = title.split()
         current_line = ''
         warped_lines = ''
