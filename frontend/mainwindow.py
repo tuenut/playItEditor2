@@ -6,15 +6,16 @@ import tkinter.filedialog
 import tkinter.ttk as ttk
 
 import backend.scriptstructure as ss
-import frontend.GUIframework as GUI
+# import frontend.GUIframework as GUI
 import frontend.pltbtn as pltbtn
+from frontend import RootWindow, AboutWindow
 
 logger = logging.getLogger('.'.join(['__main__', __name__]))
 
 
-class MainAppWindow(GUI.RootWindow):
+class MainAppWindow(RootWindow):
     def __init__(self):
-        GUI.RootWindow.__init__(self, title='Редактор PlayIt', geo='1280x768')
+        RootWindow.__init__(self, title='Редактор PlayIt', geo='1280x768')
 
         self.__open_file_path = None
         self.__save_file_path = None
@@ -33,7 +34,7 @@ class MainAppWindow(GUI.RootWindow):
                     ('Показать конфиг', self.print_config),
                 ])]),
                 ('Помощь', [collections.OrderedDict([
-                    ('О программе', lambda: GUI.AboutWindow(
+                    ('О программе', lambda: AboutWindow(
                         '', '\nРазработчик: Артем Грошев\n'))
                 ])])
             ])
@@ -64,7 +65,7 @@ class MainAppWindow(GUI.RootWindow):
                     if 'menu' not in child.winfo_name():
                         child.winfo_children()[0].button_clear()
 
-                self.edit_tabs[tab].custom_destroy()
+                self.edit_tabs[tab].destroy()
                 del self.edit_tabs[tab]
 
         for tab in self.nb.tabs():
@@ -91,7 +92,7 @@ class MainAppWindow(GUI.RootWindow):
             # Clean up tabs dict
             if self.edit_tabs:
                 for tab in list(self.edit_tabs):
-                    self.edit_tabs[tab].custom_destroy()
+                    self.edit_tabs[tab].destroy()
                     del self.edit_tabs[tab]
 
                 for tab in self.nb.tabs():
@@ -170,11 +171,9 @@ class EditView:
         self.edit_tab = pltbtn.ButtonsView(self.view_inner_frame)
         # Packing widgets
         self.view_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
-        view_h_scroll.place(rely=1, anchor=tk.SW, relwidth=1, width=-20)
-        view_v_scroll.place(relx=1, anchor=tk.NE, relheight=1, height=-20)
 
     def pack(self):
         self.frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
-    def custom_destroy(self):
+    def destroy(self):
         self.frame.destroy()

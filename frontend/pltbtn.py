@@ -389,6 +389,7 @@ class PlayItEditButton:
         self._make_bottom_frame()
 
     def _add_action(self, action=None):
+        # TODO исправить появление двойной фигурнйо скобки - {{
         try:
             if action:
                 if 'LoadNewPlt' in action.action:
