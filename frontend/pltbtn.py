@@ -4,6 +4,7 @@
 
 import logging
 import tkinter as tk
+import sys
 from tkinter import ttk
 
 import backend.tools as tools
@@ -490,7 +491,8 @@ class PlayItEditButton:
             lbl.bind('<Button-1>', self.set_color)
 
             self.dialog_window.focus_set()
-            self.dialog_window.grab_set()
+            if sys.platform != 'linux':
+                self.dialog_window.grab_set()
 
 
 def get_mouse_pos(root):
