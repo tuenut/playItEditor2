@@ -86,8 +86,8 @@ class MainAppWindow(RootWindow):
             self.menu_items_objects['Файл'].entryconfigure(
                 'Сохранить', state=tk.NORMAL)
 
-            playit_process = ss.FileStructure(self.__open_file_path)
-            playit_process.open()
+            playit_process = ss.PlayItProject(self.__open_file_path)
+            playit_process.load_project()
 
             # Clean up tabs dict
             if self.edit_tabs:
@@ -98,7 +98,7 @@ class MainAppWindow(RootWindow):
                 for tab in self.nb.tabs():
                     self.nb.forget(tab)
 
-            for key in playit_process.macros:
+            for key in playit_process.__macroses:
                 logger.debug(key)
 
                 new_tab_frame = ttk.Frame(self.main_frame)
