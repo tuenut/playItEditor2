@@ -3,6 +3,8 @@ import os
 import re
 from configparser import RawConfigParser, DuplicateOptionError
 
+__all__ = ['PlayItProject']
+
 PATH_TO_PLT = os.path.abspath('\\\\170-csb\\Stand_KRS\\daten\\mpy\\')
 MENU_NAME = 'menu.plt'
 MACROS_CHARSET = 'cp1251'
