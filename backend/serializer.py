@@ -5,10 +5,6 @@ from configparser import RawConfigParser, DuplicateOptionError
 
 __all__ = ['PlayItProject']
 
-PATH_TO_PLT = os.path.abspath('\\\\170-csb\\Stand_KRS\\daten\\mpy\\')
-MENU_NAME = 'menu.plt'
-MACROS_CHARSET = 'cp1251'
-
 logger = logging.getLogger('.'.join(['__main__', __name__]))
 
 
@@ -46,6 +42,21 @@ class PlayItProject:
 
     """
 
+    OK = 0
+    ERROR_FILE_OPEN = 1
+    ERROR_DIRECTORY_OPEN = 2
+
+    RETURN_CODES = {
+        OK: "OK",
+        ERROR_FILE_OPEN: "Can't open file.",
+        ERROR_DIRECTORY_OPEN: "Can't open directory."
+    }
+
+    PATH_TO_PLT = os.path.abspath('\\\\170-csb\\Stand_KRS\\daten\\mpy\\')
+    MENU_NAME = 'menu.plt'
+    MACROS_CHARSET = 'cp1251'
+    INIT_MACROS_PATTERN = re.compile(r'PlayIt.PlayContent.*{LoadNewPlt (?P<path>.*)}')
+
     def __init__(self):
         logger.debug('Init PlayIt serializer.')
 
@@ -56,12 +67,25 @@ class PlayItProject:
         self.__init_file_path = None
         self.__menu_path = None
 
-        self.directory_path = None
+        self.__directory_path = None
         self.project_name = None
         self.files = []
 
+    @property
+    def directory_path(self):
+        return self.__directory_path
+
+    @directory_path.setter
+    def directory_path(self, value: str):
+        value = os.path.abspath(value)
+        self.__directory_path = '\\\\' + value.lstrip('\\') if value.startswith('\\') else value
+
     def load_project(self, path_to_init_file):
-        logger.info("Open project by file <%s>", path_to_init_file)
+        logger.info("Try to open project by file <%s>", path_to_init_file)
+
+        if not os.access(path_to_init_file, os.F_OK):
+            logger.error("Can't access to file %s" % path_to_init_file)
+            return self.ERROR_FILE_OPEN
 
         self.__basename = os.path.basename(path_to_init_file)
         self.__init_file_path = os.path.normpath(path_to_init_file)
@@ -73,17 +97,13 @@ class PlayItProject:
             self.__basename, self.project_name, self.__init_file_path
         )
 
-        self.__get_directroy()
+        self.__get_directory()
         self.__get_menu()
-
-        if not os.access(self.directory_path, os.F_OK):
-            logger.error("Can't access to directory %s" % self.directory_path)
-            return 1
 
         # TODO: добавить обработку исключения, когда нет поддиректорий
         # TODO: проверить работу исключений для бэкапов
 
-        logger.debug("Walkdown to project directories recursively.")
+        logger.debug("Walk down to project directories recursively.")
 
         for path, dir_names, file_names in os.walk(self.directory_path):
             for file_name in file_names:
@@ -93,26 +113,38 @@ class PlayItProject:
             self.__handle_subgroup(group_dir)
 
     def __get_menu(self):
-        self.__menu_path = os.path.join(self.directory_path, MENU_NAME)
+        self.__menu_path = os.path.join(self.directory_path, self.MENU_NAME)
 
-    def __get_directroy(self):
-        if os.path.exists(self.__init_file_path):
-            logger.debug("Found init file.")
+    def __get_directory(self):
+        logger.debug("Found init file.")
 
+        try:
             with open(self.__init_file_path, 'r') as f:
-                lines = list(f)
-
-            for line in lines:
-                if 'PlayIt.PlayContent' in line and 'LoadNewPlt' in line:
-                    start_macros = os.path.normpath(line.split('LoadNewPlt')[1].split('}')[0])
-                    self.directory_path = start_macros.replace(os.path.basename(start_macros), '').strip()
-
-                    if self.directory_path[0:2] == ' \\':
-                        self.directory_path = '\\' + self.directory_path
-        else:
+                self.directory_path = self.INIT_MACROS_PATTERN.search(f.read()).group('path').strip()
+                self.directory_path = os.path.dirname(self.directory_path)
+        except FileNotFoundError:
             logger.debug("Init file does not exist.")
+            self.directory_path = self.fallback_dir
+        except AttributeError:
+            logger.error("Invalid init file.")
+            raise
 
-            self.directory_path = self.__init_file_path.replace('.py', '').strip()
+        logger.debug("Found directory <%s>", self.directory_path)
+
+        if not os.access(self.directory_path, os.F_OK):
+            logger.error(
+                "Can't access to directory <%s>. Try to find work directory near the <%s>.",
+                self.directory_path, self.__init_file_path
+            )
+
+            if os.access(self.fallback_dir, os.F_OK):
+                self.directory_path = self.fallback_dir
+            else:
+                logger.error("Can't open fallback directory.")
+
+    @property
+    def fallback_dir(self):
+        return self.__init_file_path.replace('.py', '').strip()
 
     def __handle_macros(self, path, file_name):
         plt_file = re.search('(?i)plt$', file_name)
@@ -127,7 +159,7 @@ class PlayItProject:
             macro = RawConfigParser()
 
             try:
-                macro.read(macros_path, encoding=MACROS_CHARSET)
+                macro.read(macros_path, encoding=self.MACROS_CHARSET)
             except DuplicateOptionError:
                 logger.exception("Found Duplicate Option!")
                 return
@@ -204,4 +236,4 @@ if __name__ == '__main__':
     proj = PlayItProject()
     proj.load_project(sys.argv[1])
 
-    pp.pprint(proj.json())
+    # pp.pprint(proj.json())
