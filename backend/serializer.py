@@ -2,7 +2,10 @@ import logging
 import os
 import re
 import hashlib
+
 from configparser import RawConfigParser, DuplicateOptionError
+
+from backend.tools import dict_merge
 
 __all__ = ['PlayItProject']
 
@@ -67,7 +70,7 @@ class PlayItProject:
         self.__basename = None
         self.__init_file_path = None
         self.__menu_path = None
-        self.__buttons = {}
+        self.__project_tree = {}
         self.__macros_path = None
 
         self.__directory_path = None
@@ -82,6 +85,10 @@ class PlayItProject:
     def directory_path(self, value: str):
         value = os.path.abspath(value)
         self.__directory_path = '\\\\' + value.lstrip('\\') if value.startswith('\\') else value
+
+    @property
+    def fallback_dir(self):
+        return self.__init_file_path.replace('.py', '').strip()
 
     def load_project(self, path_to_init_file):
         logger.info("Try to open project by file <%s>", path_to_init_file)
@@ -106,14 +113,7 @@ class PlayItProject:
         # TODO: добавить обработку исключения, когда нет поддиректорий
         # TODO: проверить работу исключений для бэкапов
 
-        logger.debug("Walk down to project directories recursively.")
-
-        for path, dir_names, file_names in os.walk(self.directory_path):
-            for file_name in file_names:
-                self.__handle_macros(path, file_name)
-
-        for group_dir in sorted(os.listdir(self.directory_path)):
-            self.__handle_subgroup(group_dir)
+        self.__parse_project()
 
     def __get_menu(self):
         self.__menu_path = os.path.join(self.directory_path, self.MENU_NAME)
@@ -145,82 +145,69 @@ class PlayItProject:
             else:
                 logger.error("Can't open fallback directory.")
 
-    @property
-    def fallback_dir(self):
-        return self.__init_file_path.replace('.py', '').strip()
+    def __parse_project(self):
+        logger.debug("Walk down to project directories recursively.")
 
-    def __handle_macros(self, path, file_name):
-        plt_file = re.search('(?i)plt$', file_name)
-        backup_file = re.search('(?i)bak', path + file_name)
-        is_dir = os.path.isdir(path + file_name)
+        for path, dir_names, file_names in os.walk(self.directory_path):
+            if self.__exclude in path:
+                logger.debug("Skip <%s><%s>.", *os.path.split(path))
+                continue
 
-        if plt_file and not backup_file and not is_dir:
-            macros_path = os.path.join(path, file_name)
+            for file_name in file_names:
+                self.__handle_project_tree(path, file_name)
 
-            logger.debug("Found <%s>", macros_path)
+    def __handle_project_tree(self, path, file_name):
+        logger.debug("Found file <%s> in <%s>", file_name, path)
 
-            macro = RawConfigParser()
+        abs_path_to_macros = os.path.join(path, file_name)
+        project_rel_path_to_macros = os.path.relpath(abs_path_to_macros, self.directory_path)
 
-            try:
-                macro.read(macros_path, encoding=self.MACROS_CHARSET)
-            except DuplicateOptionError:
-                logger.exception("Found Duplicate Option!")
-                return
+        path_head = project_rel_path_to_macros
+        tree_dict = {}
+        while True:
+            path_head, path_tail = os.path.split(path_head)
 
-            self.__macroses.update({macros_path: macro})
-            self.files.append(macros_path)
+            if path_tail:
+                if os.path.isdir(os.path.join(self.directory_path, os.path.join(path_head, path_tail))):
+                    tree_dict = {path_tail: tree_dict}
+                else:
+                    tree_dict = {path_tail: self.__handle_macros(abs_path_to_macros)}
+            else:
+                if path_head:
+                    tree_dict = {path_head: tree_dict}
 
-    def __handle_subgroup(self, group_dir):
-        is_dir = os.path.isdir(os.path.join(self.directory_path, group_dir))
+                break
 
-        if is_dir and self.__exclude not in group_dir:
-            path_to_macros = os.path.join(self.directory_path, group_dir)
-            self.__subgroups.update({path_to_macros: os.listdir(path_to_macros)})
+        dict_merge(self.__project_tree, tree_dict)
+
+    def __handle_macros(self, path):
+        logger.debug("Start parse <%s>", path)
+
+        config = RawConfigParser(inline_comment_prefixes=['#', ';'], strict=False)
+
+        try:
+            config.read(path, encoding=self.MACROS_CHARSET)
+        except DuplicateOptionError:
+            logger.exception("Found Duplicate Option!")
+            return {'error': "Found Duplicate Option!"}
+
+        return self.get_buttons(config)
 
     def json(self):
         return {
             "project_name": self.project_name,
-            "subgroups": self.__subgroups,
-            "macroses": [
-                {
-                    "buttons": self.get_buttons(filename),
-                    "path": filename
-                }
-                for filename in self.files
-            ]
+            "project_tree": self.__project_tree,
         }
 
-    def get_buttons(self, macros_path):
-        """Method returns buttons from parsed data in dict-format."""
-        self.__buttons = {}
-        self.__macros_path = macros_path
-
-        for section in self.__macroses[self.__macros_path].sections():
-            self.__parse_section(section)
-
-        return self.__buttons
-
-    def __parse_section(self, section):
-        if section == 'Entry':
-            section_obj = self.__macroses[self.__macros_path][section]
-            for button_position_dict in self.__parse_entry_section(section_obj):
-                self.__buttons.update(button_position_dict)
-
-        elif section not in ('Ctrl', 'Entry'):
-            try:
-                self.__buttons[section].update(dict(self.__macroses[self.__macros_path].items(section)))
-            except KeyError:
-                pass
-            except Exception as e:
-                logging.debug(e)
-
     @staticmethod
-    def __parse_entry_section(section):
-        for parameter in section:
-            param_value = re.sub(r'([;#].*)', '', section[parameter]).strip()
-            param_value = tuple(param_value.split(','))
+    def get_buttons(parser_obj):
+        """Method returns buttons from parsed data in dict-format."""
+        buttons = {}
 
-            yield {parameter.upper(): {"position": param_value}}
+        for section in parser_obj.sections():
+            buttons[section] = dict(parser_obj.items(section))
+
+        return buttons
 
     def dump_project(self):
         # TODO
@@ -231,7 +218,7 @@ if __name__ == '__main__':
     import sys
     import pprint
 
-    pp = pprint.PrettyPrinter(indent=4, depth=10, width=120, )
+    pp = pprint.PrettyPrinter(indent=4, depth=20, width=120, )
 
     from backend.logger import make_logger
 
@@ -242,4 +229,4 @@ if __name__ == '__main__':
     proj = PlayItProject()
     proj.load_project(sys.argv[1])
 
-    pp.pprint(proj.json())
+    # pp.pprint(proj.json())

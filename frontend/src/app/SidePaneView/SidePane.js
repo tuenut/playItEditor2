@@ -1,19 +1,68 @@
-import React from "react";
+import React, {Fragment} from "react";
 
-class SidePane extends React.Component {
+import ProjectContext from '../Context/ProjectContext';
+
+
+class PrejectTreeElement extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {"classes": "list-group-item py-0"}
+  }
+
   render() {
     return (
-      <nav className="col border-right border-dark bg-light"
-           style={{
-             "height": "100%",
-             "margin-top": "4rem",
-             "position": "fixed",
-             "width": "16rem",
-             "zIndex": 1000
-           }}
-      >
+      <Fragment>
+        <li className={this.state.classes}>
+          {this.props.name}
+          {!this.props.name.toLowerCase().endsWith('.plt') && <ProjectTree tree={this.props.content}/>}
+          </li>
+      </Fragment>
+    )
+  }
+}
+
+
+class ProjectTree extends React.Component {
+  render() {
+    return (
+      <ul className={"list-group list-group-flush"}>
+        {
+          this.props.tree &&
+          Object.keys(this.props.tree).map((name) => (
+            <PrejectTreeElement name={name} key={name} content={this.props.tree[name]}/>)
+          )
+        }
+      </ul>
+    )
+  }
+}
+
+
+class SidePane extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      "style": {
+        "height": "100%",
+        "marginTop": "4rem",
+        "position": "fixed",
+        "width": "16rem",
+        "zIndex": 1000
+      },
+      "classes": "col border-right border-dark bg-light"
+    }
+  }
+
+  render() {
+    return (
+      <nav className={this.state.classes} style={this.state.style}>
 
         <div className="d-flex flex-column my-3 d-xs-none">
+          <ProjectContext.Consumer>
+            {(context) => context.project && <ProjectTree tree={context.project.project_tree}/>}
+          </ProjectContext.Consumer>
         </div>
 
       </nav>
