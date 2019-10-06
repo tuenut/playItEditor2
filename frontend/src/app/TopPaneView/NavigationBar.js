@@ -5,7 +5,7 @@ class OpenFile extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {"file_path": ''};
+    this.state = {"file_path": null};
 
     this.handleOpenClick = this.handleOpenClick.bind(this);
     this.handleOnChange = this.handleOnChange.bind(this);
@@ -17,22 +17,22 @@ class OpenFile extends React.Component {
 
   handleOpenClick() {
     console.log(this.state.file_path);
-    axios.get('http://127.0.0.1:5000/open?file='+this.state.file_path)
+    axios.get('http://127.0.0.1:5000/open?file=' + this.state.file_path)
       .then((response) => {
         let data = response.data;
         this.props.openProjectCallback(data);
       });
   }
 
-  render(){
+  render() {
     return (
       <div className={"form-inline"}>
-          <div className="btn btn-light font-weight-bold mr-2" onClick={this.handleOpenClick}>
-            Open
-          </div>
-          <input className={"form-control"} type={"text"} value={this.state.file_path} onChange={this.handleOnChange}
-                style={{"width": "20rem"}}/>
+        <div className="btn btn-light font-weight-bold mr-2" onClick={this.handleOpenClick}>
+          Open
         </div>
+        <input className={"form-control"} type={"text"} value={this.state.file_path} onChange={this.handleOnChange}
+               style={{"width": "20rem"}} name={"open_plt"}/>
+      </div>
     )
   }
 }
@@ -49,21 +49,21 @@ class NavigationBar extends React.Component {
         </div>
 
         <div className={"d-flex justify-content-between w-100"}>
-            <div className="navbar-nav-scroll">
-              <ul className="navbar-nav flex-row">
+          <div className="navbar-nav-scroll">
+            <ul className="navbar-nav flex-row">
 
-                <li className="nav-item  mx-1">
-                  <div className="nav-link">Home</div>
-                </li>
+              <li className="nav-item  mx-1">
+                <div className="nav-link">Home</div>
+              </li>
 
-                <li className="nav-item mx-1">
-                  <OpenFile openProjectCallback={this.props.openProjectCallback}/>
-                </li>
+              <li className="nav-item mx-1">
+                <OpenFile openProjectCallback={this.props.openProjectCallback}/>
+              </li>
 
-              </ul>
-            </div>
+            </ul>
+          </div>
 
-            <div className={""}>
+          <div className={""}>
             {
               this.props.projectName &&
               <h3 className={"mx-auto text-light font-weight-bold my-0"}>
@@ -72,7 +72,7 @@ class NavigationBar extends React.Component {
                 <span>{"\>"}</span>
               </h3>
             }
-            </div>
+          </div>
         </div>
 
       </header>

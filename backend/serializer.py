@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import hashlib
 from configparser import RawConfigParser, DuplicateOptionError
 
 __all__ = ['PlayItProject']
@@ -66,6 +67,8 @@ class PlayItProject:
         self.__basename = None
         self.__init_file_path = None
         self.__menu_path = None
+        self.__buttons = {}
+        self.__macros_path = None
 
         self.__directory_path = None
         self.project_name = None
@@ -178,10 +181,13 @@ class PlayItProject:
         return {
             "project_name": self.project_name,
             "subgroups": self.__subgroups,
-            "macroses": {
-                filename: self.get_buttons(filename)
+            "macroses": [
+                {
+                    "buttons": self.get_buttons(filename),
+                    "path": filename
+                }
                 for filename in self.files
-            }
+            ]
         }
 
     def get_buttons(self, macros_path):
@@ -236,4 +242,4 @@ if __name__ == '__main__':
     proj = PlayItProject()
     proj.load_project(sys.argv[1])
 
-    # pp.pprint(proj.json())
+    pp.pprint(proj.json())

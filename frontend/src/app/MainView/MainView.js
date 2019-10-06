@@ -1,21 +1,23 @@
 import React from 'react';
 import PltWorkSpace from './PltWorkSpace';
+import SidePane from '../SidePaneView/SidePane';
 
 class MainView extends React.Component {
   constructor(props) {
     super(props);
+
+    this.state = {"project": this.props.project};
   }
 
   render() {
+    if (this.props.project !== this.state.project) {
+      this.setState({"project": this.props.project});
+    }
+
     return (
-      <main role="main" className="col-12 col-md-9 col-xl-8"
-            style={{
-              "margin-top": "7rem",
-              "margin-left": "16rem",
-              "zIndex": 0
-            }}
-      >
-        <PltWorkSpace/>
+      <main role="main">
+        <SidePane/>
+        <PltWorkSpace project={this.state.project}/>
       </main>
     )
   }
