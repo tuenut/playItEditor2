@@ -18,10 +18,11 @@ def index():
         abort(401)
 
     plt_proj = PlayItProject()
-    return_code = plt_proj.load_project(abspath(file_path))
 
-    if return_code:
-        return jsonify({'error': plt_proj.RETURN_CODES[return_code], 'error_code': return_code}), 404
+    try:
+        plt_proj.load_project(abspath(file_path))
+    except FileNotFoundError:
+        abort(404)
 
     return jsonify(plt_proj.json())
 

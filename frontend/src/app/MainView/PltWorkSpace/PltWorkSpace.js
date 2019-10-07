@@ -5,12 +5,16 @@ class PltWorkSpace extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {"rows_list": [1, 2, 3, 4, 5]}
+    this.state = {
+      "rows_list": [1, 2, 3, 4, 5],
+      "classes": "col-12 col-md-9 col-xl-8",
+      "styles": {"marginTop": "7rem", "marginLeft": "16rem", "zIndex": 0}
+    }
   }
 
   render() {
     return (
-      <div className="col-12 col-md-9 col-xl-8" style={{"marginTop": "7rem", "marginLeft": "16rem", "zIndex": 0}}>
+      <main role="main" className={this.state.classes} style={this.state.styles}>
         <table className={"bg-light table-bordered"}>
           <tbody>
           {
@@ -21,7 +25,7 @@ class PltWorkSpace extends React.Component {
           }
           </tbody>
         </table>
-      </div>
+      </main>
     )
   }
 }

@@ -1,28 +1,9 @@
 import React from 'react';
+import {Navbar, Nav, NavDropdown, Form, FormControl, Button} from 'react-bootstrap';
 
 import ProjectContext from '../Context/ProjectContext';
-import NavButtons from './NavButtons';
+import OpenFile from './OpenFile';
 import logo from './logo.png';
-
-
-const ProjectTitle = () => (
-  <ProjectContext.Consumer>
-    {
-      (context) => (
-        context.project &&
-        <h3 className={"mx-auto text-light font-weight-bold my-0"}>
-          {"Project: "}{context.project.project_name}
-        </h3>
-      )
-    }
-  </ProjectContext.Consumer>
-);
-
-const NavLogo = () => (
-  <div className={"navbar-brand"}>
-    <img className={"d-block"} width={36} height={36} alt={"logo"} src={logo}/>
-  </div>
-);
 
 
 class NavigationBar extends React.Component {
@@ -31,19 +12,43 @@ class NavigationBar extends React.Component {
 
     this.state = {
       "classes": "navbar navbar-expand navbar-dark bg-dark flex-column flex-md-row w-100",
-      "style": {"position": 'fixed', "top": 0, "zIndex": 1071}
+      "style": {"position": 'fixed', "top": 0, "zIndex": 999}
     }
   }
 
   render() {
     return (
-      <header className={this.state.classes} style={this.state.style}>
+      <header>
 
-        <NavLogo/>
 
-        <NavButtons/>
+        <Navbar bg="dark" variant={"dark"} fixed="top" expand="xl">
+          <Navbar.Brand href="#home">
+            <img className={"d-inline-block align-top"} width={36} height={36} alt={"logo"} src={logo}/>
+            <h3 className={"d-inline-block ml-2 my-1"}>{"PLT Editor"}</h3>
+          </Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav"/>
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="mr-auto">
+              <h4>{this.props.projectName}</h4>
+              {/*<Nav.Link href="#home">Home</Nav.Link>*/}
+              {/*<Nav.Link href="#link">Link</Nav.Link>*/}
+              {/*<NavDropdown title="Dropdown" id="basic-nav-dropdown">*/}
+              {/*<NavDropdown.Item href="#action/3.1">Action</NavDropdown.Item>*/}
+              {/*<NavDropdown.Item href="#action/3.2">Another action</NavDropdown.Item>*/}
+              {/*<NavDropdown.Item href="#action/3.3">Something</NavDropdown.Item>*/}
+              {/*<NavDropdown.Divider/>*/}
+              {/*<NavDropdown.Item href="#action/3.4">Separated link</NavDropdown.Item>*/}
+              {/*</NavDropdown>*/}
+            </Nav>
+            <Form inline>
+              <ProjectContext.Consumer>
+                {(context) => (<OpenFile openProjectCallback={context.openProjectCallback}
+                                         raiseErrorCallback={context.raiseErrorCallback}/>)}
+              </ProjectContext.Consumer>
+            </Form>
+          </Navbar.Collapse>
+        </Navbar>
 
-        <ProjectTitle/>
 
       </header>
     )

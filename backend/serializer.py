@@ -69,7 +69,7 @@ class PlayItProject:
         self.__exclude = '_bak'
         self.__basename = None
         self.__init_file_path = None
-        self.__menu_path = None
+        self.menu_path = None
         self.__project_tree = {}
         self.__macros_path = None
 
@@ -95,7 +95,7 @@ class PlayItProject:
 
         if not os.access(path_to_init_file, os.F_OK):
             logger.error("Can't access to file %s" % path_to_init_file)
-            return self.ERROR_FILE_OPEN
+            raise FileNotFoundError(self.ERROR_FILE_OPEN)
 
         self.__basename = os.path.basename(path_to_init_file)
         self.__init_file_path = os.path.normpath(path_to_init_file)
@@ -107,24 +107,16 @@ class PlayItProject:
             self.__basename, self.project_name, self.__init_file_path
         )
 
-        self.__get_directory()
-        self.__get_menu()
-
-        # TODO: добавить обработку исключения, когда нет поддиректорий
-        # TODO: проверить работу исключений для бэкапов
-
+        self.__get_directory_and_menu()
         self.__parse_project()
 
-    def __get_menu(self):
-        self.__menu_path = os.path.join(self.directory_path, self.MENU_NAME)
-
-    def __get_directory(self):
+    def __get_directory_and_menu(self):
         logger.debug("Found init file.")
 
         try:
             with open(self.__init_file_path, 'r') as f:
-                self.directory_path = self.INIT_MACROS_PATTERN.search(f.read()).group('path').strip()
-                self.directory_path = os.path.dirname(self.directory_path)
+                self.menu_path = self.INIT_MACROS_PATTERN.search(f.read()).group('path').strip()
+                self.directory_path = os.path.dirname(self.menu_path)
         except FileNotFoundError:
             logger.debug("Init file does not exist.")
             self.directory_path = self.fallback_dir

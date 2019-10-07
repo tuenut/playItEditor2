@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Fragment} from 'react';
 import PltWorkSpace from './PltWorkSpace/PltWorkSpace';
 import SidePane from '../SidePaneView/SidePane';
 
@@ -9,10 +9,10 @@ class MainView extends React.Component {
 
   render() {
     return (
-      <main role="main">
+      <Fragment>
         <SidePane/>
         <PltWorkSpace/>
-      </main>
+      </Fragment>
     )
   }
 }
