@@ -67,28 +67,42 @@ class PlayItProject:
         self.__macroses = {}
         self.__subgroups = {}
         self.__exclude = '_bak'
-        self.__basename = None
-        self.__init_file_path = None
-        self.menu_path = None
+        self.__project_init_file_path = None
         self.__project_tree = {}
         self.__macros_path = None
 
-        self.__directory_path = None
+        self.__project_directory_path = None
+        self.__menu_file_path = None
         self.project_name = None
         self.files = []
 
     @property
     def directory_path(self):
-        return self.__directory_path
+        return self.__project_directory_path
 
     @directory_path.setter
     def directory_path(self, value: str):
-        value = os.path.abspath(value)
-        self.__directory_path = '\\\\' + value.lstrip('\\') if value.startswith('\\') else value
+        value = value if os.path.isabs(value) else os.path.abspath(value)
+        self.__project_directory_path = '\\\\' + value.lstrip('\\') if value.startswith('\\') else value
+        self.__project_directory_path = os.path.normpath(self.__project_directory_path)
+
+    @property
+    def menu_path(self):
+        return self.__menu_file_path
+
+    @menu_path.setter
+    def menu_path(self, value: str):
+        value = value if os.path.isabs(value) else os.path.abspath(value)
+        self.__menu_file_path = '\\\\' + value.lstrip('\\') if value.startswith('\\') else value
+        self.__menu_file_path = os.path.normpath(self.__menu_file_path)
+
+    @property
+    def menu(self):
+        return os.path.split(re.sub(self.directory_path, '',self.menu_path))
 
     @property
     def fallback_dir(self):
-        return self.__init_file_path.replace('.py', '').strip()
+        return self.__project_init_file_path.replace('.py', '').strip()
 
     def load_project(self, path_to_init_file):
         logger.info("Try to open project by file <%s>", path_to_init_file)
@@ -97,24 +111,20 @@ class PlayItProject:
             logger.error("Can't access to file %s" % path_to_init_file)
             raise FileNotFoundError(self.ERROR_FILE_OPEN)
 
-        self.__basename = os.path.basename(path_to_init_file)
-        self.__init_file_path = os.path.normpath(path_to_init_file)
+        self.__project_init_file_path = os.path.normpath(path_to_init_file)
 
-        self.project_name = self.__basename.replace('.py', '')
+        self.project_name = os.path.basename(self.__project_init_file_path).replace('.py', '')
 
-        logger.debug(
-            "basename=<%s> project_name=<%s> init_file_path=<%s>",
-            self.__basename, self.project_name, self.__init_file_path
-        )
+        logger.debug("project_name=<%s> init_file_path=<%s>", self.project_name, self.__project_init_file_path)
 
         self.__get_directory_and_menu()
         self.__parse_project()
 
     def __get_directory_and_menu(self):
-        logger.debug("Found init file.")
+        logger.debug("Found init file <%s>.", self.__project_init_file_path)
 
         try:
-            with open(self.__init_file_path, 'r') as f:
+            with open(self.__project_init_file_path, 'r') as f:
                 self.menu_path = self.INIT_MACROS_PATTERN.search(f.read()).group('path').strip()
                 self.directory_path = os.path.dirname(self.menu_path)
         except FileNotFoundError:
@@ -124,12 +134,13 @@ class PlayItProject:
             logger.error("Invalid init file.")
             raise
 
-        logger.debug("Found directory <%s>", self.directory_path)
+        logger.debug("Found menu file <%s>.", self.menu_path)
+        logger.debug("Found directory <%s>.", self.directory_path)
 
         if not os.access(self.directory_path, os.F_OK):
             logger.error(
                 "Can't access to directory <%s>. Try to find work directory near the <%s>.",
-                self.directory_path, self.__init_file_path
+                self.directory_path, self.__project_init_file_path
             )
 
             if os.access(self.fallback_dir, os.F_OK):
@@ -151,8 +162,8 @@ class PlayItProject:
     def __handle_project_tree(self, path, file_name):
         logger.debug("Found file <%s> in <%s>", file_name, path)
 
-        abs_path_to_macros = os.path.join(path, file_name)
-        project_rel_path_to_macros = os.path.relpath(abs_path_to_macros, self.directory_path)
+        abs_path_to_macros = os.path.normpath(os.path.join(path, file_name))
+        project_rel_path_to_macros = os.path.normpath(os.path.relpath(abs_path_to_macros, self.directory_path))
 
         path_head = project_rel_path_to_macros
         tree_dict = {}
@@ -189,6 +200,7 @@ class PlayItProject:
         return {
             "project_name": self.project_name,
             "project_tree": self.__project_tree,
+            "menu_macros": self.menu
         }
 
     @staticmethod
@@ -221,4 +233,4 @@ if __name__ == '__main__':
     proj = PlayItProject()
     proj.load_project(sys.argv[1])
 
-    # pp.pprint(proj.json())
+    pp.pprint(proj.json())

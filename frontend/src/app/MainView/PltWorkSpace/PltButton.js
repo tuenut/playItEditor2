@@ -17,8 +17,11 @@ export default class PltButton extends React.Component {
   }
 
   render() {
+    // console.log(this.props.content);
+
     return (
       <div className={"d-block"} style={{"width": "160px", "height": "160px"}}>
+        {/*{this.props.content}*/}
       </div>
     )
   }
