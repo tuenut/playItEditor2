@@ -10,22 +10,33 @@ class App extends React.Component {
   constructor(props) {
     super(props);
 
+    this.openProject = this.openProject.bind(this);
+    this.closeErrorModal = this.closeErrorModal.bind(this);
+    this.raiseErrorModal = this.raiseErrorModal.bind(this);
+    this.switchMacros = this.switchMacros.bind(this);
+
     this.state = {
-      "project": null,
+      "project": {},
+      "current_macros": null,
+      "openProject": this.openProject,
       "error": {
         "show": false,
         "title": null,
         "body": null,
-      }
+      },
+      "raiseError": this.raiseErrorModal,
+      "closeError": this.closeErrorModal,
+      "switchMacros": this.switchMacros
     };
+  }
 
-    this.openProject = this.openProject.bind(this);
-    this.closeErrorModal = this.closeErrorModal.bind(this);
-    this.raiseErrorModal = this.raiseErrorModal.bind(this);
+  switchMacros(macros_name){
+    this.setState({"current_macros": macros_name})
   }
 
   openProject(project_json) {
     this.setState({"project": project_json});
+    this.switchMacros(this.state.project.menu_macros[1]); // open default macros
 
     console.log(this.state.project)
   }
@@ -51,27 +62,18 @@ class App extends React.Component {
   }
 
   render() {
-    const context = {
-      "project": this.state.project,
-      "openProjectCallback": this.openProject,
-      "raiseErrorCallback": this.raiseErrorModal,
-      "closeErrorCallback": this.closeErrorModal
-    };
-
-    const error = this.state.error
-
     return (
       <div className={"container-fluid"}>
 
         <div className={"row flex-xl-nowrap"}>
 
-          <ProjectContext.Provider value={context}>
+          <ProjectContext.Provider value={this.state}>
 
             <NavigationBar/>
 
             <MainView/>
 
-            <Error closeCallback={this.closeErrorModal} error={error}/>
+            <Error error={this.state.error}/>
 
           </ProjectContext.Provider>
 

@@ -1,7 +1,29 @@
 import React from "react";
+import {Table} from 'react-bootstrap';
 
 import PltRow from './PltRow';
 import ProjectContext from '../../Context/ProjectContext';
+
+
+function PltWorkSpaceTitle(props) {
+  return (
+    <thead>
+    <tr className={"border-0"}>
+      <td colSpan={8} className={"border-0 p-0 m-0"}>
+        <ProjectContext.Consumer>
+          {
+            (context) =>
+              <div className={"alert-danger w-100 m-0"}>
+                Editor {context.project && ("<" + context.project.menu_macros + ">")}
+              </div>
+          }
+        </ProjectContext.Consumer>
+      </td>
+    </tr>
+    </thead>
+  )
+}
+
 
 class PltWorkSpace extends React.Component {
   constructor(props) {
@@ -14,32 +36,19 @@ class PltWorkSpace extends React.Component {
     }
   }
 
+  static contextType = ProjectContext;
+
   render() {
     return (
       <main role="main" className={this.state.classes} style={this.state.styles}>
-        <table className={"bg-light table-bordered"}>
-          <thead>
-          <tr className={"border-0"}>
-            <td colSpan={8} className={"border-0 p-0 m-0"}>
-              <ProjectContext.Consumer>
-                {
-                  (context) =>
-                    <div className={"alert-danger w-100 m-0"}>
-                      Editor {context.project && ("<" + context.project.menu_macros + ">")}
-                    </div>
-                }
-              </ProjectContext.Consumer>
-            </td>
-          </tr>
-          </thead>
+        <Table bordered>
+          <PltWorkSpaceTitle/>
           <tbody>
-          {
-            this.state.rows_list.map(
-              (number) => <PltRow rowPosition={number} key={number}/>
-            )
-          }
+          {this.state.rows_list.map((number) =>
+            <PltRow rowPosition={number} key={number}/>
+          )}
           </tbody>
-        </table>
+        </Table>
       </main>
     )
   }

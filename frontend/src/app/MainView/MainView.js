@@ -1,17 +1,16 @@
 import React, {Fragment} from 'react';
 import PltWorkSpace from './PltWorkSpace/PltWorkSpace';
 import SidePane from '../SidePaneView/SidePane';
+import ProjectContext from "../Context/ProjectContext";
 
 class MainView extends React.Component {
-  constructor(props) {
-    super(props);
-  }
+  static contextType = ProjectContext;
 
   render() {
     return (
       <Fragment>
         <SidePane/>
-        <PltWorkSpace/>
+        {this.context.current_macros && <PltWorkSpace/>}
       </Fragment>
     )
   }

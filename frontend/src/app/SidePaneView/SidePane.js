@@ -1,22 +1,41 @@
 import React, {Fragment} from "react";
+import {Button} from "react-bootstrap";
 
 import ProjectContext from '../Context/ProjectContext';
 
 
 class PrejectTreeElement extends React.Component {
+  static contextType = ProjectContext;
+
   constructor(props) {
     super(props);
 
-    this.state = {"classes": "list-group-item py-0"}
+    this.state = {
+      "classes": "py-0 m-0",
+      "button_classes": "py-0 rounded-0 ",
+      "macros_path": [this.props.path]
+    }
   }
 
   render() {
     return (
       <Fragment>
         <li className={this.state.classes}>
-          {this.props.name}
-          {!this.props.name.toLowerCase().endsWith('.plt') && <ProjectTree tree={this.props.content}/>}
-          </li>
+
+          {
+            this.props.name.toLowerCase().endsWith('.plt') ? (
+              <Button block variant={"light"} onClick={() => this.context.switchMacros(this.props.name)}
+                      className={this.state.button_classes}>
+                {this.props.name}
+              </Button>
+            ) : (
+              <div>
+                <Button block variant={"light"} disabled>{this.props.name}</Button>
+                <ProjectTree tree={this.props.content}/>
+              </div>
+            )
+          }
+        </li>
       </Fragment>
     )
   }
@@ -25,12 +44,13 @@ class PrejectTreeElement extends React.Component {
 
 class ProjectTree extends React.Component {
   render() {
+    let element_path = this.props.parent ? (["/"].concat(this,props.parent)) : ["/"];
     return (
       <ul className={"list-group list-group-flush"}>
         {
           this.props.tree &&
           Object.keys(this.props.tree).map((name) => (
-            <PrejectTreeElement name={name} key={name} content={this.props.tree[name]}/>)
+            <PrejectTreeElement name={name} key={name} content={this.props.tree[name]} path={element_path}/>)
           )
         }
       </ul>
@@ -55,17 +75,15 @@ class SidePane extends React.Component {
     }
   }
 
+  static contextType = ProjectContext;
+
   render() {
     return (
       <nav className={this.state.classes} style={this.state.style}>
         <div className={"alert-danger w-100 m-0"}>Side Panel</div>
         <div className="d-flex flex-column my-3 d-xs-none">
-
-          <ProjectContext.Consumer>
-            {(context) => context.project && <ProjectTree tree={context.project.project_tree}/>}
-          </ProjectContext.Consumer>
+          {this.context.project && <ProjectTree tree={this.context.project.project_tree}/>}
         </div>
-
       </nav>
     )
   }
