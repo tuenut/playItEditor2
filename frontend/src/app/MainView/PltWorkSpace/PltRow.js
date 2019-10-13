@@ -23,7 +23,13 @@ export default class PltRow extends React.Component {
     * */
     if (this.context.project.menu_macros) {
       let position = [this.state.position, y];
-      let macros = this.context.project.project_tree[this.context.current_macros];
+      let macros;
+
+      for (let i in this.context.current_macros){
+        macros = this.context.project.project_tree[this.context.current_macros[i]];
+      }
+
+
       let entry_section = macros["Entry"];
       let entry_keys = Object.keys(entry_section);
 

@@ -13,8 +13,14 @@ class PrejectTreeElement extends React.Component {
     this.state = {
       "classes": "py-0 m-0",
       "button_classes": "py-0 rounded-0 ",
-      "macros_path": [this.props.path]
-    }
+      "path": [this.props.path]
+    };
+
+    this.handleOnClick = this.handleOnClick.bind(this);
+  }
+
+  handleOnClick(){
+    this.context.switchMacros(this.state.path.concat([this.props.name]))
   }
 
   render() {
@@ -24,14 +30,14 @@ class PrejectTreeElement extends React.Component {
 
           {
             this.props.name.toLowerCase().endsWith('.plt') ? (
-              <Button block variant={"light"} onClick={() => this.context.switchMacros(this.props.name)}
+              <Button block variant={"light"} onClick={this.handleOnClick}
                       className={this.state.button_classes}>
                 {this.props.name}
               </Button>
             ) : (
               <div>
                 <Button block variant={"light"} disabled>{this.props.name}</Button>
-                <ProjectTree tree={this.props.content}/>
+                <ProjectTree tree={this.props.content} path={this.state.path.concat(this.props.path)}/>
               </div>
             )
           }
@@ -44,13 +50,12 @@ class PrejectTreeElement extends React.Component {
 
 class ProjectTree extends React.Component {
   render() {
-    let element_path = this.props.parent ? (["/"].concat(this,props.parent)) : ["/"];
     return (
       <ul className={"list-group list-group-flush"}>
         {
           this.props.tree &&
           Object.keys(this.props.tree).map((name) => (
-            <PrejectTreeElement name={name} key={name} content={this.props.tree[name]} path={element_path}/>)
+            <PrejectTreeElement name={name} key={name} content={this.props.tree[name]} path={this.props.path}/>)
           )
         }
       </ul>
@@ -82,7 +87,7 @@ class SidePane extends React.Component {
       <nav className={this.state.classes} style={this.state.style}>
         <div className={"alert-danger w-100 m-0"}>Side Panel</div>
         <div className="d-flex flex-column my-3 d-xs-none">
-          {this.context.project && <ProjectTree tree={this.context.project.project_tree}/>}
+          {this.context.project && <ProjectTree tree={this.context.project.project_tree} path={[]}/>}
         </div>
       </nav>
     )

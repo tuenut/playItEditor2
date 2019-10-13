@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-import hashlib
+from pathlib import Path
 
 from configparser import RawConfigParser, DuplicateOptionError
 
@@ -44,115 +44,143 @@ class PlayItProject:
     todo: Поддержка вложенности подгрупп более одного уровня не гарантируется.
     todo: Поддержка макросов с прокруткой не гарантируется.
 
+    :ivar __plt_init: Path
+    :ivar __plt_dir: Path
+    :ivar __plt_menu: Path
+    :ivar __project_name: str
     """
 
     OK = 0
     ERROR_FILE_OPEN = 1
     ERROR_DIRECTORY_OPEN = 2
+    INVALID_INIT_FILE = 3
 
-    RETURN_CODES = {
+    ERRORS = {
         OK: "OK",
         ERROR_FILE_OPEN: "Can't open file.",
-        ERROR_DIRECTORY_OPEN: "Can't open directory."
+        ERROR_DIRECTORY_OPEN: "Can't open directory.",
+        INVALID_INIT_FILE: "Invalid init file."
     }
 
     PATH_TO_PLT = os.path.abspath('\\\\170-csb\\Stand_KRS\\daten\\mpy\\')
     MENU_NAME = 'menu.plt'
     MACROS_CHARSET = 'cp1251'
-    INIT_MACROS_PATTERN = re.compile(r'PlayIt.PlayContent.*{LoadNewPlt (?P<path>.*)}')
+    PLT_INIT_PATTERN = re.compile(r'PlayIt.PlayContent.*{LoadNewPlt (?P<path>.*)}')
+
+    EXCLUDE = '_bak'
 
     def __init__(self):
         logger.debug('Init PlayIt serializer.')
 
+        self.__plt_init = None
+        self.__plt_dir = None
+        self.__plt_menu = None
+        self.__project_name = None
+
         self.__macroses = {}
         self.__subgroups = {}
-        self.__exclude = '_bak'
-        self.__project_init_file_path = None
         self.__project_tree = {}
-        self.__macros_path = None
 
-        self.__project_directory_path = None
-        self.__menu_file_path = None
-        self.project_name = None
         self.files = []
 
+    @staticmethod
+    def _get_path(path: str or Path):
+        path = str(path)
+
+        if path.startswith("\\\\\\\\"):
+            path = path.replace("\\\\", "\\")
+
+        path_obj = Path(path)
+        if not path_obj.is_absolute():
+            path_obj = path_obj.absolute()
+
+        return path_obj
+
     @property
-    def directory_path(self):
-        return self.__project_directory_path
+    def project_directory(self):
+        return self.__plt_dir
 
-    @directory_path.setter
-    def directory_path(self, value: str):
-        value = value if os.path.isabs(value) else os.path.abspath(value)
-        self.__project_directory_path = '\\\\' + value.lstrip('\\') if value.startswith('\\') else value
-        self.__project_directory_path = os.path.normpath(self.__project_directory_path)
+    @project_directory.setter
+    def project_directory(self, value: str):
+        self.__plt_dir = self._get_path(value)
 
-    @property
-    def menu_path(self):
-        return self.__menu_file_path
+        if not self.__plt_dir.exists() or not self.__plt_dir.is_dir():
+            logger.error(
+                "Can't access to directory <%s>. Try to find work directory near the init file <%s>.",
+                self.__plt_dir, self.__plt_init
+            )
 
-    @menu_path.setter
-    def menu_path(self, value: str):
-        value = value if os.path.isabs(value) else os.path.abspath(value)
-        self.__menu_file_path = '\\\\' + value.lstrip('\\') if value.startswith('\\') else value
-        self.__menu_file_path = os.path.normpath(self.__menu_file_path)
+            if self.fallback_dir.exists() and self.fallback_dir.is_dir():
+                self.__plt_dir = self.fallback_dir
+            else:
+                logger.error("Directory <%s> does not exist.", self.__plt_dir)
+                raise FileNotFoundError(self.ERRORS[self.ERROR_DIRECTORY_OPEN])
 
     @property
     def menu(self):
-        return os.path.split(re.sub(self.directory_path, '',self.menu_path))
+        return self.__plt_menu
+
+    @menu.setter
+    def menu(self, value: str):
+        self.__plt_menu = self._get_path(value)
+
+        if not self.__plt_menu.exists():
+            logger.error("Menu file <%s> does not exist.", self.__plt_menu)
+            raise FileNotFoundError(self.ERRORS[self.ERROR_FILE_OPEN])
+
+    @property
+    def project_init_file_path(self):
+        return self.__plt_init
+
+    @project_init_file_path.setter
+    def project_init_file_path(self, value):
+        self.__plt_init = self._get_path(value)
+
+        if not self.__plt_init.exists():
+            logger.error("Init file <%s> does not exist.", self.__plt_init)
+            raise FileNotFoundError(self.ERRORS[self.ERROR_FILE_OPEN])
+
+        self.__project_name = self.__plt_init.name.rstrip(self.__plt_init.suffix)
+
+    @property
+    def project_name(self):
+        return self.__project_name
 
     @property
     def fallback_dir(self):
-        return self.__project_init_file_path.replace('.py', '').strip()
+        return Path(str(self.__plt_init).rstrip(self.__plt_init.suffix))
 
     def load_project(self, path_to_init_file):
-        logger.info("Try to open project by file <%s>", path_to_init_file)
+        logger.info("Try to open project by init file <%s>", path_to_init_file)
 
-        if not os.access(path_to_init_file, os.F_OK):
-            logger.error("Can't access to file %s" % path_to_init_file)
-            raise FileNotFoundError(self.ERROR_FILE_OPEN)
+        self.project_init_file_path = path_to_init_file
 
-        self.__project_init_file_path = os.path.normpath(path_to_init_file)
-
-        self.project_name = os.path.basename(self.__project_init_file_path).replace('.py', '')
-
-        logger.debug("project_name=<%s> init_file_path=<%s>", self.project_name, self.__project_init_file_path)
+        logger.debug("Found init file <%s>.", self.__plt_init)
 
         self.__get_directory_and_menu()
+
         self.__parse_project()
 
     def __get_directory_and_menu(self):
-        logger.debug("Found init file <%s>.", self.__project_init_file_path)
+        with open(self.__plt_init, 'r') as f:
+            menu_path_string = self.PLT_INIT_PATTERN.search(f.read()).group('path').strip()
 
-        try:
-            with open(self.__project_init_file_path, 'r') as f:
-                self.menu_path = self.INIT_MACROS_PATTERN.search(f.read()).group('path').strip()
-                self.directory_path = os.path.dirname(self.menu_path)
-        except FileNotFoundError:
-            logger.debug("Init file does not exist.")
-            self.directory_path = self.fallback_dir
-        except AttributeError:
-            logger.error("Invalid init file.")
-            raise
+            logger.debug("Menu path in init-file <%s>", menu_path_string)
 
-        logger.debug("Found menu file <%s>.", self.menu_path)
-        logger.debug("Found directory <%s>.", self.directory_path)
-
-        if not os.access(self.directory_path, os.F_OK):
-            logger.error(
-                "Can't access to directory <%s>. Try to find work directory near the <%s>.",
-                self.directory_path, self.__project_init_file_path
-            )
-
-            if os.access(self.fallback_dir, os.F_OK):
-                self.directory_path = self.fallback_dir
+            if not menu_path_string:
+                raise Exception(self.ERRORS[self.INVALID_INIT_FILE])
             else:
-                logger.error("Can't open fallback directory.")
+                self.menu = menu_path_string
+            self.project_directory = self.menu.parent
+
+        logger.debug("Found menu file <%s>.", self.menu)
+        logger.debug("Found directory <%s>.", self.project_directory)
 
     def __parse_project(self):
         logger.debug("Walk down to project directories recursively.")
 
-        for path, dir_names, file_names in os.walk(self.directory_path):
-            if self.__exclude in path:
+        for path, dir_names, file_names in os.walk(self.project_directory):
+            if self.EXCLUDE in path:
                 logger.debug("Skip <%s><%s>.", *os.path.split(path))
                 continue
 
@@ -163,7 +191,7 @@ class PlayItProject:
         logger.debug("Found file <%s> in <%s>", file_name, path)
 
         abs_path_to_macros = os.path.normpath(os.path.join(path, file_name))
-        project_rel_path_to_macros = os.path.normpath(os.path.relpath(abs_path_to_macros, self.directory_path))
+        project_rel_path_to_macros = os.path.normpath(os.path.relpath(abs_path_to_macros, self.project_directory))
 
         path_head = project_rel_path_to_macros
         tree_dict = {}
@@ -171,7 +199,7 @@ class PlayItProject:
             path_head, path_tail = os.path.split(path_head)
 
             if path_tail:
-                if os.path.isdir(os.path.join(self.directory_path, os.path.join(path_head, path_tail))):
+                if os.path.isdir(os.path.join(self.project_directory, os.path.join(path_head, path_tail))):
                     tree_dict = {path_tail: tree_dict}
                 else:
                     tree_dict = {path_tail: self.__handle_macros(abs_path_to_macros)}
@@ -200,7 +228,7 @@ class PlayItProject:
         return {
             "project_name": self.project_name,
             "project_tree": self.__project_tree,
-            "menu_macros": self.menu
+            "menu_macros": self.menu.name
         }
 
     @staticmethod
