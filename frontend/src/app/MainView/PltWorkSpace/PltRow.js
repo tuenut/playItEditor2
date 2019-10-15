@@ -21,16 +21,18 @@ export default class PltRow extends React.Component {
     * todo: найти способ, как не итерироваться по всем кнопкам, а сузить поиск, хотя бы до строки,
     * todo: либо сделать матричную индексацию кнопок в контексте.
     * */
-    if (this.context.project.menu_macros) {
+
+    if (this.context.project.menu_macros !== null) {
       let position = [this.state.position, y];
-      let macros;
+      let tree_object = this.context.project.project_tree;
 
-      for (let i in this.context.current_macros){
-        macros = this.context.project.project_tree[this.context.current_macros[i]];
+      for (let i in this.context.current_macros) {
+        tree_object = tree_object[this.context.current_macros[i]];
       }
+      let macros_object = tree_object;
 
+      let entry_section = macros_object["Entry"];
 
-      let entry_section = macros["Entry"];
       let entry_keys = Object.keys(entry_section);
 
       for (let i in entry_keys) {
@@ -38,12 +40,11 @@ export default class PltRow extends React.Component {
         let key_position = entry_section[key].split(',');
 
         if (position[0] == key_position[0] && position[1] == key_position[1]) {
-          return macros[key.toUpperCase()]
+          return macros_object[key.toUpperCase()]
         }
       }
     }
   }
-
 
   render() {
     return (

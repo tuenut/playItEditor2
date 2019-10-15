@@ -30,15 +30,19 @@ class App extends React.Component {
     };
   }
 
-  switchMacros(macros_name){
+  switchMacros(macros_name) {
     this.setState({"current_macros": macros_name})
   }
 
   openProject(project_json) {
-    this.setState({"project": project_json});
-    this.switchMacros(this.state.project.menu_macros[1]); // open default macros
+    console.log("Open new project");
 
-    console.log(this.state.project)
+    this.setState({
+      "project": project_json,
+      "current_macros": project_json.menu_macros
+    });
+
+    // console.log(this.state);
   }
 
   closeErrorModal() {

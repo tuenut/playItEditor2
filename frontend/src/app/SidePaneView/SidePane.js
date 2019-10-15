@@ -11,15 +11,15 @@ class PrejectTreeElement extends React.Component {
     super(props);
 
     this.state = {
-      "classes": "py-0 m-0",
+      "classes": "py-0",
       "button_classes": "py-0 rounded-0 ",
-      "path": [this.props.path]
+      "path": this.props.path
     };
 
     this.handleOnClick = this.handleOnClick.bind(this);
   }
 
-  handleOnClick(){
+  handleOnClick() {
     this.context.switchMacros(this.state.path.concat([this.props.name]))
   }
 
@@ -36,8 +36,8 @@ class PrejectTreeElement extends React.Component {
               </Button>
             ) : (
               <div>
-                <Button block variant={"light"} disabled>{this.props.name}</Button>
-                <ProjectTree tree={this.props.content} path={this.state.path.concat(this.props.path)}/>
+                <Button  disabled variant={"light"} className={"font-weight-bold"}>{this.props.name}</Button>
+                <ProjectTree tree={this.props.content} path={this.state.path.concat(this.props.name)}/>
               </div>
             )
           }
@@ -49,12 +49,32 @@ class PrejectTreeElement extends React.Component {
 
 
 class ProjectTree extends React.Component {
+  sort_directories_after(tree) {
+    let sorted_tree = [];
+    let tree_keys = Object.keys(tree).sort();
+
+    let i = 0;
+    while (i < tree_keys.length) {
+      let key = tree_keys[i];
+
+      if (key.toLowerCase().endsWith('plt')) {
+        sorted_tree.push(tree_keys.splice(i, 1)[0]);
+      } else {
+        i++;
+      }
+    }
+
+    sorted_tree = sorted_tree.concat(tree_keys);
+
+    return sorted_tree
+  }
+
   render() {
     return (
-      <ul className={"list-group list-group-flush"}>
+      <ul className={"list-group list-group-flush border"}>
         {
           this.props.tree &&
-          Object.keys(this.props.tree).map((name) => (
+          this.sort_directories_after(this.props.tree).map((name) => (
             <PrejectTreeElement name={name} key={name} content={this.props.tree[name]} path={this.props.path}/>)
           )
         }
@@ -74,9 +94,9 @@ class SidePane extends React.Component {
         "marginTop": "4.2rem",
         "position": "fixed",
         "width": "16rem",
-        "zIndex": 998
+        "zIndex": 998,
       },
-      "classes": "col border-right border-dark bg-light px-0"
+      "classes": "col border-right border-dark bg-light px-0 overflow-auto"
     }
   }
 

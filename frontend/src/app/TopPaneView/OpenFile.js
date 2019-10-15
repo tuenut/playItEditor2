@@ -11,7 +11,7 @@ export default class OpenFile extends React.Component {
     super(props);
 
     this.state = {
-      "file_path": '/home/tuenut/temp/mpy/49.py',
+      "file_path": '/home/tuenut/temp/mpy/_example.py',
       "placeholderText": "Enter init file path..."
     };
 

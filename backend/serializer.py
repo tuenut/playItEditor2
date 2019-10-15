@@ -3,13 +3,44 @@ import os
 import re
 from pathlib import Path
 
-from configparser import RawConfigParser, DuplicateOptionError
+from configparser import DuplicateOptionError, ConfigParser, Interpolation
 
 from backend.tools import dict_merge
 
 __all__ = ['PlayItProject']
 
 logger = logging.getLogger('.'.join(['__main__', __name__]))
+
+
+class PlayItparserInterpolation(Interpolation):
+    _CMD_LOAD_NEW_PLT = "LoadNewPlt"
+    _CMD_CSB_52_ACTION = "CSB LA0052M1"
+    _ACTION_TYPES = ("kst-1", "typ1", "typ2", "typ3", "art", "kst-2")
+    _CMD_KEYS = ("Enter", *["F" + str(i) for i in range(1, 13)], "Esc")
+
+    def __init__(self, project_directory):
+        self.project_directory = project_directory
+
+    def parse_content_option(self, value):
+        commands_list = [cmd.split('}') for cmd in value.split('{') if cmd]
+
+        for i, (cmd, val) in enumerate(commands_list):
+            if self._CMD_LOAD_NEW_PLT in cmd:
+                commands_list[i][1] = cmd.strip('{}').replace(self._CMD_LOAD_NEW_PLT, '').strip()
+                commands_list[i][0] = self._CMD_LOAD_NEW_PLT
+
+        return commands_list
+
+    def before_get(self, parser, section, option, value, defaults=None):
+        return value
+
+    def before_read(self, parser, section, option, value):
+        """parser, section, option, value"""
+
+        if option.lower() == "content":
+            return self.parse_content_option(value)
+        else:
+            return value
 
 
 class PlayItProject:
@@ -77,6 +108,8 @@ class PlayItProject:
         self.__plt_menu = None
         self.__project_name = None
 
+        self.__configparser_interpolator = PlayItparserInterpolation(self.project_directory)
+
         self.__macroses = {}
         self.__subgroups = {}
         self.__project_tree = {}
@@ -95,6 +128,9 @@ class PlayItProject:
             path_obj = path_obj.absolute()
 
         return path_obj
+
+    def _get_rel_path(self, path_obj: Path):
+        return path_obj.relative_to(self.project_directory)
 
     @property
     def project_directory(self):
@@ -115,6 +151,11 @@ class PlayItProject:
             else:
                 logger.error("Directory <%s> does not exist.", self.__plt_dir)
                 raise FileNotFoundError(self.ERRORS[self.ERROR_DIRECTORY_OPEN])
+
+    @property
+    def root_dir(self):
+        """Root dir to all plt-projects."""
+        return [p for p in self.project_init_file_path.parents if p.match('*/mpy')][-1]
 
     @property
     def menu(self):
@@ -149,6 +190,13 @@ class PlayItProject:
     @property
     def fallback_dir(self):
         return Path(str(self.__plt_init).rstrip(self.__plt_init.suffix))
+
+    @property
+    def interpolator(self):
+        if self.__configparser_interpolator.project_directory != self.project_directory:
+            self.__configparser_interpolator.project_directory = self.project_directory
+
+        return self.__configparser_interpolator
 
     def load_project(self, path_to_init_file):
         logger.info("Try to open project by init file <%s>", path_to_init_file)
@@ -214,7 +262,11 @@ class PlayItProject:
     def __handle_macros(self, path):
         logger.debug("Start parse <%s>", path)
 
-        config = RawConfigParser(inline_comment_prefixes=['#', ';'], strict=False)
+        # Try to use some custom interpolation
+        config = ConfigParser(inline_comment_prefixes=['#', ';'], strict=False, interpolation=self.interpolator)
+
+        # # Like RawConfigParser
+        # config = ConfigParser(inline_comment_prefixes=['#', ';'], strict=False, interpolation=None)
 
         try:
             config.read(path, encoding=self.MACROS_CHARSET)
@@ -227,8 +279,9 @@ class PlayItProject:
     def json(self):
         return {
             "project_name": self.project_name,
+            "project_directory": str(self.project_directory),
             "project_tree": self.__project_tree,
-            "menu_macros": self.menu.name
+            "menu_macros": self.menu.relative_to(self.project_directory).parts
         }
 
     @staticmethod
