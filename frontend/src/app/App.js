@@ -3,10 +3,10 @@ import React from 'react';
 import MainView from './MainView/MainView';
 import NavigationBar from './TopPaneView/NavigationBar';
 import Error from './Modals/Error';
-import ProjectContext from './Context/ProjectContext';
+import {ProjectContext, AppMethodsContext, AppStateContext} from './Context/ProjectContext';
 
 
-class App extends React.Component {
+export default class App extends React.Component {
   constructor(props) {
     super(props);
 
@@ -16,30 +16,40 @@ class App extends React.Component {
     this.switchMacros = this.switchMacros.bind(this);
 
     this.state = {
-      "project": {},
-      "current_macros": null,
-      "openProject": this.openProject,
-      "error": {
-        "show": false,
-        "title": null,
-        "body": null,
+      "projectState": {},
+      "appMethods": {
+        "openProject": this.openProject,
+        "raiseError": this.raiseErrorModal,
+        "closeError": this.closeErrorModal,
+        "switchMacros": this.switchMacros
       },
-      "raiseError": this.raiseErrorModal,
-      "closeError": this.closeErrorModal,
-      "switchMacros": this.switchMacros
+      "appState": {
+        "currentMacros": null,
+        "error": {
+          "show": false,
+          "title": null,
+          "body": null,
+        }
+      }
     };
   }
 
   switchMacros(macros_name) {
-    this.setState({"current_macros": macros_name})
+    this.setState({
+      "appState": {
+        "currentMacros": macros_name,
+        "error": this.state.appState.error
+      }
+    })
   }
 
   openProject(project_json) {
-    console.log("Open new project");
-
     this.setState({
-      "project": project_json,
-      "current_macros": project_json.menu_macros
+      "projectState": project_json,
+      "appState": {
+        "currentMacros": project_json.menu_macros,
+        "error": this.state.appState.error
+      }
     });
 
     // console.log(this.state);
@@ -47,20 +57,25 @@ class App extends React.Component {
 
   closeErrorModal() {
     this.setState({
-      "error": {
-        "show": false,
-        "title": null,
-        "body": null,
+      "appState": {
+        "currentMacros": this.state.appState.currentMacros,
+        "error": {
+          "show": false,
+          "title": null,
+          "body": null,
+        }
       }
     })
   }
 
   raiseErrorModal(title, body) {
     this.setState({
-      "error": {
-        "show": true,
-        "title": title,
-        "body": body
+      "appState": {
+        "error": {
+          "show": true,
+          "title": title,
+          "body": body
+        }
       }
     })
   }
@@ -68,17 +83,20 @@ class App extends React.Component {
   render() {
     return (
       <div className={"container-fluid"}>
-
         <div className={"row flex-xl-nowrap"}>
 
-          <ProjectContext.Provider value={this.state}>
+          <ProjectContext.Provider value={{"projectState": this.state.projectState}}>
+            <AppMethodsContext.Provider value={{"appMethods": this.state.appMethods}}>
+              <AppStateContext.Provider value={{"appState": this.state.appState}}>
 
-            <NavigationBar/>
+                <NavigationBar/>
 
-            <MainView/>
+                <MainView/>
 
-            <Error error={this.state.error}/>
+                <Error/>
 
+              </AppStateContext.Provider>
+            </AppMethodsContext.Provider>
           </ProjectContext.Provider>
 
         </div>
@@ -87,5 +105,3 @@ class App extends React.Component {
   }
 }
 
-
-export default App;

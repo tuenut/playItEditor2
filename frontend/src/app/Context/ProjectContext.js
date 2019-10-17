@@ -1,8 +1,14 @@
 import React from "react";
 
-const ProjectContext = React.createContext({
-  project: {},
-  loadProject: () => {}
+const ProjectContext = React.createContext({"projectState": {}});
+const AppMethodsContext = React.createContext({
+  "appMethods": {
+    "openProject": () => {},
+    "raiseError": () => {},
+    "closeError": () => {},
+    "switchMacros": () => {}
+  }
 });
+const AppStateContext = React.createContext({"appState": {}});
 
-export default ProjectContext;
+export {ProjectContext, AppMethodsContext, AppStateContext};

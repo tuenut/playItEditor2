@@ -3,10 +3,12 @@ import {Button, InputGroup, FormControl} from 'react-bootstrap';
 
 import axios from "axios/index";
 
-import ProjectContext from '../Context/ProjectContext';
+import {AppMethodsContext} from '../Context/ProjectContext';
 
 
 export default class OpenFile extends React.Component {
+  static contextType = AppMethodsContext;
+
   constructor(props) {
     super(props);
 
@@ -26,12 +28,10 @@ export default class OpenFile extends React.Component {
   handleOpenClick() {
     axios.get('http://127.0.0.1:5000/open?file=' + this.state.file_path)
       .then(
-        (response) => this.context.openProject(response.data),
-        (error) => this.context.raiseError("Error", "Cant open file")
+        (response) => this.context.appMethods.openProject(response.data),
+        (error) => this.context.appMethods.raiseError("Error", "Cant open file")
       );
   }
-
-  static contextType = ProjectContext;
 
   render() {
     return (

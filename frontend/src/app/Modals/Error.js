@@ -1,33 +1,37 @@
 import React, {Fragment} from "react";
 import {Modal, Button} from 'react-bootstrap';
 
-import ProjectContext from '../Context/ProjectContext';
+import {AppMethodsContext, AppStateContext} from '../Context/ProjectContext';
 
 
 export default class ErrorModal extends React.Component {
-  static contextType = ProjectContext;
-
   render() {
     return (
-      <Fragment>
+      <AppMethodsContext.Consumer>
+        {({appMethods}) => (
+          <AppStateContext.Consumer>
+            {({appState}) => (
 
-        <Modal show={this.props.error.show} onHide={this.context.closeError}>
-          <Modal.Header closeButton>
-            <Modal.Title>
-              {this.props.error.title}
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            {this.props.error.body}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={this.context.closeError}>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
+              <Modal show={appState.error.show} onHide={appMethods.closeError}>
+                <Modal.Header closeButton>
+                  <Modal.Title>
+                    {appState.error.title}
+                  </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  {appState.error.body}
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button variant="secondary" onClick={appMethods.closeError}>
+                    Close
+                  </Button>
+                </Modal.Footer>
+              </Modal>
 
-      </Fragment>
+            )}
+          </AppStateContext.Consumer>
+        )}
+      </AppMethodsContext.Consumer>
     )
   }
 }

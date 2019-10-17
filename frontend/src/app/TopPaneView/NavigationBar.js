@@ -2,11 +2,10 @@ import React from 'react';
 import {Navbar, Nav, NavDropdown, Form} from 'react-bootstrap';
 
 import OpenFile from './OpenFile';
-import ProjectContext from '../Context/ProjectContext';
 import logo from './logo.png';
 
 
-class NavigationBar extends React.Component {
+export default class NavigationBar extends React.Component {
   constructor(props) {
     super(props);
 
@@ -16,22 +15,22 @@ class NavigationBar extends React.Component {
     }
   }
 
-  static contextType = ProjectContext;
-
   render() {
     return (
       <header>
-
 
         <Navbar bg="dark" variant={"dark"} fixed="top" expand="xl">
           <Navbar.Brand href="#home">
             <img className={"d-inline-block align-top"} width={36} height={36} alt={"logo"} src={logo}/>
             <h3 className={"d-inline-block ml-2 my-1"}>
-              {"PLT Editor"}{ this.context.project.project_name && ": " + this.context.project.project_name}
+              {"PLT Editor"}
               </h3>
           </Navbar.Brand>
+
           <Navbar.Toggle aria-controls="basic-navbar-nav"/>
+
           <Navbar.Collapse id="basic-navbar-nav" >
+
             <Nav className="ml-auto mr-2">
               <Nav.Link href="#home">Home</Nav.Link>
               <Nav.Link href="#link">Link</Nav.Link>
@@ -43,17 +42,15 @@ class NavigationBar extends React.Component {
                 <NavDropdown.Item href="#action/3.4">Separated link</NavDropdown.Item>
               </NavDropdown>
             </Nav>
+
             <Form inline>
               <OpenFile/>
-
             </Form>
+
           </Navbar.Collapse>
         </Navbar>
-
 
       </header>
     )
   }
 }
-
-export default NavigationBar;

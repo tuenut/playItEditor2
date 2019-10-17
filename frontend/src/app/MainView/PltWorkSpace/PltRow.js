@@ -1,7 +1,7 @@
 import React from "react";
 
 import PltButton from "./PltButton";
-import ProjectContext from "../../Context/ProjectContext";
+import {ProjectContext, AppStateContext} from "../../Context/ProjectContext";
 
 
 export default class PltRow extends React.Component {
@@ -14,20 +14,18 @@ export default class PltRow extends React.Component {
     }
   }
 
-  static contextType = ProjectContext;
-
-  loadButton(y) {
+  loadButton(y, projectState, appState) {
     /*Ищем конфигурацию данной кнопки в контексте исходя из позиции кнопки.
     * todo: найти способ, как не итерироваться по всем кнопкам, а сузить поиск, хотя бы до строки,
     * todo: либо сделать матричную индексацию кнопок в контексте.
     * */
 
-    if (this.context.project.menu_macros !== null) {
+    if (projectState.menu_macros !== null) {
       let position = [this.state.position, y];
-      let tree_object = this.context.project.project_tree;
+      let tree_object = projectState.project_tree;
 
-      for (let i in this.context.current_macros) {
-        tree_object = tree_object[this.context.current_macros[i]];
+      for (let i in appState.currentMacros) {
+        tree_object = tree_object[appState.currentMacros[i]];
       }
       let macros_object = tree_object;
 
@@ -48,13 +46,22 @@ export default class PltRow extends React.Component {
 
   render() {
     return (
-      <tr>
-        {
-          this.state.cells.map((number) =>
-            <PltButton config={this.loadButton(number)} key={number} position={[this.state.position, number]}/>
-          )
-        }
-      </tr>
+      <ProjectContext.Consumer>
+        {({projectState}) => (
+          <AppStateContext.Consumer>
+            {({appState}) => (
+              <tr>
+                {this.state.cells.map((number) =>
+                  <PltButton
+                    config={this.loadButton(number, projectState, appState)} key={number}
+                    position={[this.state.position, number]}
+                  />
+                )}
+              </tr>
+            )}
+          </AppStateContext.Consumer>
+        )}
+      </ProjectContext.Consumer>
     )
   }
 }

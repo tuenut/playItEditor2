@@ -1,54 +1,42 @@
-import React from "react";
+import React, {Fragment} from "react";
 
 import PltRow from './PltRow';
-import ProjectContext from '../../Context/ProjectContext';
+import {ProjectContext, AppMethodsContext, AppStateContext} from '../../Context/ProjectContext';
 
 
-function PltWorkSpaceTitle(props) {
-  return (
-    <thead>
-    <tr className={"border-0"}>
-      <td colSpan={8} className={"border-0 p-0 m-0"}>
-
-        <div className={"alert-danger w-100 m-0"}>
-          Editor {("<" + props.title.join('/') + ">")}
-        </div>
-
-      </td>
-    </tr>
-    </thead>
-  )
-}
-
-
-class PltWorkSpace extends React.Component {
+export default class PltWorkSpace extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      "rows_list": [1, 2, 3, 4, 5],
+      "rowsList": [1, 2, 3, 4, 5],
       "classes": "col",
       "styles": {"marginTop": "7rem", "marginLeft": "16rem", "zIndex": 0}
     }
   }
 
-  static contextType = ProjectContext;
-
   render() {
     return (
       <main role="main" className={this.state.classes} style={this.state.styles}>
-        <table className={"table-bordered"}>
-          <PltWorkSpaceTitle title={this.context.current_macros}/>
-          <tbody>
-          {this.state.rows_list.map((number) =>
-            <PltRow rowPosition={number} key={number}/>
+        <AppStateContext.Consumer>
+          {({appState}) => (
+            appState.currentMacros && <PltEditorTable rows={this.state.rowsList}/>
           )}
-          </tbody>
-        </table>
+        </AppStateContext.Consumer>
       </main>
     )
   }
 }
 
-export default PltWorkSpace;
+
+function PltEditorTable(props) {
+  return (
+    <table className={"table-bordered"}>
+      <tbody>
+      {props.rows.map((number) => <PltRow rowPosition={number} key={number}/>)}
+      </tbody>
+    </table>
+  )
+}
+
 

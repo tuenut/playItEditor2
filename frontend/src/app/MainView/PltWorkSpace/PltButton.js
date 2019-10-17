@@ -1,24 +1,8 @@
 import React, {Fragment} from "react";
 import {ContextMenuTrigger} from "react-contextmenu";
 
-import ProjectContext from '../../Context/ProjectContext';
 
 import PltButtonContextMenu from './PltButtonContextMenu';
-
-function PltButtonTitle(props) {
-  let title_lines = props.title ? props.title.split("/n") : [];
-
-  return (
-    <Fragment>
-      {title_lines.map((text, index) =>
-        <div className={"text-center"} key={index}>
-          <span>{text}</span>
-          <br/>
-        </div>
-      )}
-    </Fragment>
-  )
-}
 
 
 export default class PltButton extends React.Component {
@@ -80,7 +64,6 @@ export default class PltButton extends React.Component {
   }
 
   handleOnClick(event) {
-
   }
 
   componentWillReceiveProps(nextProps) {
@@ -90,8 +73,6 @@ export default class PltButton extends React.Component {
       this.setButtonEmpty();
     }
   }
-
-  static contextType = ProjectContext;
 
   render() {
     let style = Object.assign(this.getBgColor(), this.state.div_style);
@@ -110,4 +91,20 @@ export default class PltButton extends React.Component {
       </td>
     )
   }
+}
+
+
+function PltButtonTitle(props) {
+  let title_lines = props.title ? props.title.split("/n") : [];
+
+  return (
+    <Fragment>
+      {title_lines.map((text, index) =>
+        <div className={"text-center"} key={index}>
+          <span>{text}</span>
+          <br/>
+        </div>
+      )}
+    </Fragment>
+  )
 }
