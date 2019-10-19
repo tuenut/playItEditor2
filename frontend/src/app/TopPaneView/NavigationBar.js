@@ -24,12 +24,12 @@ export default class NavigationBar extends React.Component {
             <img className={"d-inline-block align-top"} width={36} height={36} alt={"logo"} src={logo}/>
             <h3 className={"d-inline-block ml-2 my-1"}>
               {"PLT Editor"}
-              </h3>
+            </h3>
           </Navbar.Brand>
 
           <Navbar.Toggle aria-controls="basic-navbar-nav"/>
 
-          <Navbar.Collapse id="basic-navbar-nav" >
+          <Navbar.Collapse id="basic-navbar-nav">
 
             <Nav className="ml-auto mr-2">
               <Nav.Link href="#home">Home</Nav.Link>
@@ -43,9 +43,9 @@ export default class NavigationBar extends React.Component {
               </NavDropdown>
             </Nav>
 
-            <Form inline>
-              <OpenFile/>
-            </Form>
+
+            <OpenFile/>
+
 
           </Navbar.Collapse>
         </Navbar>

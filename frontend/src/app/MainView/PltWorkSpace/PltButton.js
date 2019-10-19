@@ -11,7 +11,7 @@ export default class PltButton extends React.Component {
 
     this.state = {
       "position": this.props.position,
-      "div_style": {
+      "btnStyle": {
         "width": "160px",
         "height": "160px",
       },
@@ -75,10 +75,10 @@ export default class PltButton extends React.Component {
   }
 
   render() {
-    let style = Object.assign(this.getBgColor(), this.state.div_style);
+    let style = Object.assign(this.getBgColor(), this.state.btnStyle);
 
     return (
-      <td className={"m-0 p-0"} style={this.state.div_style}>
+      <Fragment>
 
         <ContextMenuTrigger id={this.state.position.join('')}>
           <button className={"btn rounded-0 m-0 p-0"} style={style} type={"button"} onClick={this.handleOnClick}>
@@ -88,7 +88,7 @@ export default class PltButton extends React.Component {
 
         <PltButtonContextMenu menuId={this.state.position.join('')} isButtonEmpty={this.isButtonEmpty}/>
 
-      </td>
+      </Fragment>
     )
   }
 }
