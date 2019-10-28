@@ -3,10 +3,13 @@ import React from "react";
 const ProjectContext = React.createContext({"projectState": {}});
 const AppMethodsContext = React.createContext({
   "appMethods": {
+
     "openProject": () => {},
-    "raiseError": () => {},
-    "closeError": () => {},
-    "switchMacros": () => {}
+    "raiseErrorModal": () => {},
+    "closeErrorModal": () => {},
+    "switchMacros": () => {},
+    "closeEditPltButtonModal": () => {},
+    "openEditPltButtonModal": () => {}
   }
 });
 const AppStateContext = React.createContext({"appState": {}});

@@ -75,18 +75,18 @@ export default class PltButton extends React.Component {
   }
 
   render() {
-    let style = Object.assign(this.getBgColor(), this.state.btnStyle);
+    let style = Object.assign(this.getBgColor(), this.state.btnStyle); // todo: makes some questions
 
     return (
       <Fragment>
 
-        <ContextMenuTrigger id={this.state.position.join('')}>
+        <ContextMenuTrigger id={this.state.position.join('x')}>
           <button className={"btn rounded-0 m-0 p-0"} style={style} type={"button"} onClick={this.handleOnClick}>
             <PltButtonTitle title={this.props.config && this.props.config['title']}/>
           </button>
         </ContextMenuTrigger>
 
-        <PltButtonContextMenu menuId={this.state.position.join('')} isButtonEmpty={this.isButtonEmpty}/>
+        <PltButtonContextMenu menuId={this.state.position.join('x')} isButtonEmpty={this.isButtonEmpty}/>
 
       </Fragment>
     )
@@ -94,8 +94,8 @@ export default class PltButton extends React.Component {
 }
 
 
-function PltButtonTitle(props) {
-  let title_lines = props.title ? props.title.split("/n") : [];
+function PltButtonTitle({title}) {
+  let title_lines = title ? title.split("/n") : [];
 
   return (
     <Fragment>

@@ -29,7 +29,7 @@ export default class OpenFile extends React.Component {
     axios.get('http://127.0.0.1:5000/open?file=' + this.state.file_path)
       .then(
         (response) => this.context.appMethods.openProject(response.data),
-        (error) => this.context.appMethods.raiseError("Error", "Cant open file")
+        (error) => this.context.appMethods.raiseErrorModal("Error", "Cant open file")
       );
   }
 

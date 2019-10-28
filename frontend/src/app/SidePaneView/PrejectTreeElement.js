@@ -1,7 +1,7 @@
 import React, {Fragment} from "react";
 import {Button} from "react-bootstrap";
 
-import {ProjectContext, AppMethodsContext} from "../Context/ProjectContext";
+import {AppMethodsContext} from "../Context/ProjectContext";
 import ProjectTree from './ProjectTree';
 
 
@@ -26,26 +26,20 @@ export default class PrejectTreeElement extends React.Component {
 
   render() {
     return (
-      <Fragment>
-        <li className={this.state.classes}>
-
-          {
-            this.props.name.toLowerCase().endsWith('.plt') ? (
-              <Button
-                block variant={"light"} onClick={this.handleOnClick} className={this.state.button_classes}
-              >
-                {this.props.name}
-              </Button>
-            ) : (
-              <div>
-                <Button disabled variant={"light"} className={"font-weight-bold"}>{this.props.name}</Button>
-                <ProjectTree tree={this.props.content} path={this.state.path.concat(this.props.name)}/>
-              </div>
-            )
-          }
-
-        </li>
-      </Fragment>
+      <li className={this.state.classes}>
+        {this.props.name.toLowerCase().endsWith('.plt') ? (
+          <Button
+            block variant={"light"} onClick={this.handleOnClick} className={this.state.button_classes}
+          >
+            {this.props.name}
+          </Button>
+        ) : (
+          <div>
+            <Button disabled variant={"light"} className={"font-weight-bold"}>{this.props.name}</Button>
+            <ProjectTree tree={this.props.content} path={this.state.path.concat(this.props.name)}/>
+          </div>
+        )}
+      </li>
     )
   }
 }

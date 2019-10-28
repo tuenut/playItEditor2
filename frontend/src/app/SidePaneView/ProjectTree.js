@@ -1,10 +1,11 @@
-import React from "react";
+import React, {Fragment} from "react";
 
 import PrejectTreeElement from './PrejectTreeElement';
 
+export default ProjectTree;
 
-export default class ProjectTree extends React.Component {
-  sort_directories_after(tree) {
+function ProjectTree({tree, path}) {
+  if (tree) {
     let sorted_tree = [];
     let tree_keys = Object.keys(tree).sort();
 
@@ -18,22 +19,16 @@ export default class ProjectTree extends React.Component {
         i++;
       }
     }
-
     sorted_tree = sorted_tree.concat(tree_keys);
 
-    return sorted_tree
-  }
-
-  render() {
     return (
       <ul className={"list-group list-group-flush border"}>
-        {
-          this.props.tree &&
-          this.sort_directories_after(this.props.tree).map((name) => (
-            <PrejectTreeElement name={name} key={name} content={this.props.tree[name]} path={this.props.path}/>)
-          )
-        }
+        {sorted_tree.map((name) => (
+          <PrejectTreeElement name={name} key={name} content={tree[name]} path={path}/>)
+        )}
       </ul>
     )
+  } else {
+    return (<Fragment/>)
   }
 }
