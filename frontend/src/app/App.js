@@ -8,7 +8,7 @@ import EditPltButtonModalView from './Modals/EditButton';
 import {ProjectContext, AppMethodsContext, AppStateContext} from './Context/ProjectContext';
 
 
-export default class App extends React.Component {
+class App extends React.Component {
   constructor(props) {
     super(props);
 
@@ -42,6 +42,7 @@ export default class App extends React.Component {
         },
         "edit": {
           "show": false,
+          "button": null
         }
       }
     };
@@ -89,22 +90,25 @@ export default class App extends React.Component {
         "error": this.state.appState.error,
         "edit": {
           "show": false,
-          "title": null,
-          "body": null,
+          "button": null
         }
       }
     })
   }
 
   openEditPltButtonModal(btnPosition) {
+    let btnPositionArray = btnPosition.split('x');
+    let row = btnPositionArray[0];
+    let col = btnPositionArray[1];
+    let button = this.getButton(row, col, this.state.appState.currentMacros);
+
     this.setState({
       "appState": {
         "currentMacros": this.state.appState.currentMacros,
         "error": this.state.appState.error,
         "edit": {
           "show": true,
-          "title": btnPosition,
-          "body": null,
+          "button": button,
         }
       }
     })
@@ -157,6 +161,7 @@ export default class App extends React.Component {
 
   render() {
     return (
+
       <div className={"container-fluid"}>
         <div className={"row flex-xl-nowrap"}>
 
@@ -171,14 +176,15 @@ export default class App extends React.Component {
                 <ErrorModal/>
                 <EditPltButtonModalView/>
 
-
               </AppStateContext.Provider>
             </AppMethodsContext.Provider>
           </ProjectContext.Provider>
 
         </div>
       </div>
+
     )
   }
 }
 
+export default App;

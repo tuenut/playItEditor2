@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, abort
+from flask import Flask, jsonify, request, abort, send_from_directory, render_template
 from flask_cors import CORS
 from logging import DEBUG
 
@@ -6,12 +6,17 @@ from os.path import basename, abspath
 from backend.logger import make_logger
 from backend.serializer import PlayItProject
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='frontend/build/static', template_folder='frontend/build')
 CORS(app)
 
 
-@app.route('/open')
+@app.route('/')
 def index():
+    """Serve react SPA"""
+    return render_template('index.html')
+
+@app.route('/open')
+def open_project():
     file_path = request.args.get('file')
 
     if file_path is None:
