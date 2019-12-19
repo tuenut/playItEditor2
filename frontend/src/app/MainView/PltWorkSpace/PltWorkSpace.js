@@ -14,17 +14,17 @@ function PltWorkSpace() {
 
   return (
     <main role="main" className={"col"} style={mainStyle}>
-      <AppStateContext.Consumer>
-        {({appState}) => (appState.currentMacros &&
-          <AppMethodsContext.Consumer>
-            {({appMethods}) => (
-              <PltTable
-                macros={appState.currentMacros} getButton={appMethods.getButton} getMacros={appMethods.getMacros}
-              />
-            )}
-          </AppMethodsContext.Consumer>
-        )}
-      </AppStateContext.Consumer>
+      {/*<AppStateContext.Consumer>*/}
+        {/*{({appState}) => (appState.currentMacros &&*/}
+          {/*<AppMethodsContext.Consumer>*/}
+            {/*{({appMethods}) => (*/}
+              {/*<PltTable*/}
+                {/*macros={appState.currentMacros} getButton={appMethods.getButton} getMacros={appMethods.getMacros}*/}
+              {/*/>*/}
+            {/*)}*/}
+          {/*</AppMethodsContext.Consumer>*/}
+        {/*)}*/}
+      {/*</AppStateContext.Consumer>*/}
     </main>
   )
 }

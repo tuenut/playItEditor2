@@ -1,8 +1,8 @@
 import React from 'react';
 import {Navbar, Nav, NavDropdown} from 'react-bootstrap';
 
-import OpenFile from './OpenFile';
-import logo from './logo.png';
+import OpenFileContainer from '../../containers/TopPaneView/OpenFile';
+import logo from '../../resources/logo.png';
 
 
 export default NavigationBar;
@@ -35,7 +35,7 @@ function NavigationBar() {
             </NavDropdown>
           </Nav>
 
-          <OpenFile/>
+          <OpenFileContainer />
 
         </Navbar.Collapse>
 

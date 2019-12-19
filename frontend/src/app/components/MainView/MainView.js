@@ -1,5 +1,5 @@
 import React, {Fragment} from 'react';
-import PltWorkSpace from './PltWorkSpace/PltWorkSpace';
+import PltWorkSpace from '../../MainView/PltWorkSpace/PltWorkSpace';
 import SidePane from '../SidePaneView/SidePane';
 
 

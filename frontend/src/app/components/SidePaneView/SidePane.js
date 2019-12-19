@@ -1,7 +1,7 @@
 import React from "react";
 
-import {ProjectContext} from '../Context/ProjectContext';
-import ProjectTree from './ProjectTree';
+import {ProjectContext} from '../../Context/ProjectContext';
+import ProjectTree from '../../SidePaneView/ProjectTree';
 
 
 export default SidePane;
