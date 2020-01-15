@@ -1,6 +1,6 @@
 import React, {Fragment} from 'react';
-import PltWorkSpace from '../../MainView/PltWorkSpace/PltWorkSpace';
-import SidePane from '../SidePaneView/SidePane';
+import SidePane from './SidePaneView/SidePane';
+// import PltWorkSpace from '../../MainView/PltWorkSpace/PltWorkSpace';
 
 
 export default MainView;
@@ -9,7 +9,7 @@ function MainView() {
   return (
     <Fragment>
       <SidePane/>
-      <PltWorkSpace/>
+      {/*<PltWorkSpace/>*/}
     </Fragment>
   )
 }

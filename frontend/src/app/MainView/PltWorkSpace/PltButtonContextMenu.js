@@ -2,12 +2,8 @@ import React, {Fragment} from "react";
 import {ContextMenu, MenuItem} from "react-contextmenu";
 import {Card, Button, ButtonGroup} from "react-bootstrap";
 
-import {AppMethodsContext} from '../../Context/ProjectContext';
-
 
 export default class PltButtonContextMenu extends React.Component {
-  static contextType = AppMethodsContext;
-
   constructor(props) {
     super(props);
 

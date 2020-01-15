@@ -1,11 +1,8 @@
 import React from "react";
-
 import PltButton from "./PltButton";
-import {ProjectContext, AppMethodsContext, AppStateContext} from '../../Context/ProjectContext';
 
-export default PltWorkSpace;
 
-function PltWorkSpace() {
+export default function PltWorkSpace() {
   let mainStyle = {
     "marginTop": "7rem",
     "marginLeft": "16rem",

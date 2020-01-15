@@ -2,13 +2,16 @@ import React from 'react';
 import { createStore } from "redux";
 import { Provider } from "react-redux";
 
-// import MainView from './components/MainView/MainView';
+import MainView from './components/MainView/MainView';
 import NavigationBar from './components/TopPaneView/NavigationBar';
 // import ErrorModal from './Modals/Error';
 // import EditPltButtonModalView from './Modals/EditButton';
 import reducer from "./store/reducers";
 
-const store = createStore(reducer);
+const store = createStore(
+  reducer,
+  window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+  );
 
 
 class App extends React.Component {
@@ -21,7 +24,7 @@ class App extends React.Component {
 
           <NavigationBar/>
 
-          {/*<MainView/>*/}
+          <MainView/>
 
           {/*<ErrorModal/>*/}
           {/*<EditPltButtonModalView/>*/}

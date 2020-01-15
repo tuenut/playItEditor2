@@ -1,13 +1,10 @@
 import React, {Fragment} from "react";
 import {Button} from "react-bootstrap";
 
-import {AppMethodsContext} from "../Context/ProjectContext";
 import ProjectTree from './ProjectTree';
 
 
 export default class PrejectTreeElement extends React.Component {
-  static contextType = AppMethodsContext;
-
   constructor(props) {
     super(props);
 
@@ -36,7 +33,7 @@ export default class PrejectTreeElement extends React.Component {
         ) : (
           <div>
             <Button disabled variant={"light"} className={"font-weight-bold"}>{this.props.name}</Button>
-            <ProjectTree tree={this.props.content} path={this.state.path.concat(this.props.name)}/>
+            {/*<ProjectTree tree={this.props.content} path={this.state.path.concat(this.props.name)}/>*/}
           </div>
         )}
       </li>

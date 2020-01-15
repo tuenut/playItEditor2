@@ -1,13 +1,13 @@
-import {CHANGE_OPEN_FILE_PATH} from './actions';
+import {PROJECT_PATH_INPUT_ON_CHANGE} from './actions';
 
-const default_state = {open_project_path: '/home/tuenut/temp/mpy/_example.py'};
+const default_state = {project_path: '/home/tuenut/temp/mpy/_example.py'};
 
-export const openFileReducer = (state = default_state, action) => {
+export const navbarLevelReducer = (state = default_state, action) => {
   switch (action.type) {
-    case CHANGE_OPEN_FILE_PATH:
+    case PROJECT_PATH_INPUT_ON_CHANGE:
       return {
         ...state,
-        open_project_path: action.payload
+        project_path: action.payload
       }
 
     default:

@@ -1,6 +1,6 @@
-export const CHANGE_OPEN_FILE_PATH = 'CHANGE_FILE_PATH';
+export const PROJECT_PATH_INPUT_ON_CHANGE = 'PROJECT_PATH_INPUT_ON_CHANGE';
 
-export const changeFilePath = open_project_path => ({
-  type: CHANGE_OPEN_FILE_PATH,
-  payload: open_project_path
+export const projectPathOnChange = project_path => ({
+  type: PROJECT_PATH_INPUT_ON_CHANGE,
+  payload: project_path
 })

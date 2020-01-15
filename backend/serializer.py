@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 from pathlib import Path
@@ -9,6 +8,7 @@ from backend.tools import dict_merge
 
 __all__ = ['PlayItProject']
 
+import logging
 logger = logging.getLogger('.'.join(['__main__', __name__]))
 
 

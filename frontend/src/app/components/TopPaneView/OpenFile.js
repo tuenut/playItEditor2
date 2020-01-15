@@ -2,7 +2,7 @@ import React from "react";
 import {Button, InputGroup, FormControl} from 'react-bootstrap';
 
 import axios from "axios/index";
-import {openProject} from "../../store/App/actions";
+import {openProjectOnClick} from "../../store/App/actions";
 
 
 export default class OpenFile extends React.Component {
@@ -15,13 +15,13 @@ export default class OpenFile extends React.Component {
   }
 
   handleOnChange(event) {
-    this.props.changeFilePath(event.target.value);
+    this.props.projectPathOnChange(event.target.value);
   }
 
   handleOpenClick(event) {
-    axios.get('http://127.0.0.1:5000/open?file=' + this.props.open_project_path)
+    axios.get('http://127.0.0.1:5000/open?file=' + this.props.project_path)
       .then(
-        (response) => this.props.openProject(response.data),
+        (response) => this.props.openProjectOnClick(response.data),
         (error) => this.context.appMethods.raiseErrorModal("Error", "Cant open file")
       );
   }
@@ -37,17 +37,17 @@ export default class OpenFile extends React.Component {
       <InputGroup>
         <FormControl
           placeholder={"Enter project path"} aria-label={"Enter project path"} aria-describedby="openFile"
-          style={{"width": "20rem"}} name={"openProject"} value={this.props.open_project_path}
+          style={{"width": "20rem"}} name={"openProject"} value={this.props.project_path}
           onChange={this.handleOnChange}
           onKeyDown={this.handleOnPressEnter}
-      />
-    <InputGroup.Append>
-      <Button variant={"light"} className={"border-left"} onClick={this.handleOpenClick}>
-        Open PLT project
-      </Button>
-    </InputGroup.Append>
-  </InputGroup>
-  )
+        />
+        <InputGroup.Append>
+          <Button variant={"light"} className={"border-left"} onClick={this.handleOpenClick}>
+            Open PLT project
+          </Button>
+        </InputGroup.Append>
+      </InputGroup>
+    )
   }
 }
 
